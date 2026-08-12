@@ -1,0 +1,24 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hms_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hms_user
+      POSTGRES_PASSWORD: hms_password
+      POSTGRES_DB: hms_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U hms_user -d hms_db']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
