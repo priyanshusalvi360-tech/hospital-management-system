@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HMS — Hospital Management System Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --primary:#2563eb; --primary-light:#eff6ff; --primary-dark:#1d4ed8;
+      --bg:#f8fafc; --surface:#ffffff; --border:#e2e8f0;
+      --text:#0f172a; --text-muted:#64748b;
+      --sidebar-w:240px; --header-h:64px;
+    }
+    .dark {
+      --bg:#0f172a; --surface:#1e293b; --border:#334155;
+      --text:#f1f5f9; --text-muted:#94a3b8; --primary-light:#1e3a5f;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;}
+
+    /* SIDEBAR */
+    .sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;transition:background .3s,border-color .3s;}
+    .sidebar-logo{height:var(--header-h);display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid var(--border);font-weight:800;font-size:17px;color:var(--primary);}
+    .sidebar-logo svg{width:26px;height:26px;flex-shrink:0;}
+    .sidebar-logo small{font-size:10px;font-weight:500;color:var(--text-muted);display:block;}
+    .nav{flex:1;padding:14px 10px;overflow-y:auto;}
+    .nav-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);padding:8px 10px 4px;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-muted);transition:all .15s;margin-bottom:1px;text-decoration:none;border:none;background:none;width:100%;}
+    .nav-item:hover{background:var(--primary-light);color:var(--primary);}
+    .nav-item.active{background:var(--primary-light);color:var(--primary);font-weight:600;}
+    .nav-item svg{width:17px;height:17px;flex-shrink:0;}
+    .sidebar-footer{padding:14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+    .av{width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+    .av-info{flex:1;min-width:0;}
+    .av-name{font-size:13px;font-weight:600;}
+    .av-role{font-size:10px;color:var(--text-muted);}
+    .logout-btn{padding:6px;border-radius:6px;cursor:pointer;color:var(--text-muted);border:none;background:none;transition:all .15s;}
+    .logout-btn:hover{background:#fee2e2;color:#ef4444;}
+
+    /* HEADER */
+    .header{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--header-h);background:rgba(255,255,255,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 22px;gap:14px;z-index:99;transition:all .3s;}
+    .dark .header{background:rgba(30,41,59,.88);}
+    .header-title{font-size:17px;font-weight:700;flex:1;}
+    .search-bar{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:7px 16px;font-size:12px;color:var(--text-muted);width:220px;}
+    .search-bar svg{width:14px;height:14px;}
+    .header-actions{display:flex;align-items:center;gap:6px;}
+    .icon-btn{width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--text-muted);transition:all .15s;}
+    .icon-btn:hover{background:var(--primary-light);color:var(--primary);}
+    .icon-btn svg{width:17px;height:17px;}
+    .notif-badge{position:relative;}
+    .notif-badge::after{content:'';position:absolute;top:6px;right:6px;width:7px;height:7px;background:#ef4444;border-radius:50%;border:2px solid var(--surface);}
+
+    /* MAIN */
+    .main{margin-left:var(--sidebar-w);margin-top:var(--header-h);min-height:calc(100vh - var(--header-h));padding:24px;background:var(--bg);}
+
+    /* VIEWS */
+    .view{display:none;}
+    .view.active{display:block;animation:fadeUp .3s ease;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+    /* PAGE HEADER */
+    .page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;}
+    .page-title{font-size:22px;font-weight:800;}
+    .page-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
+
+    /* BUTTONS */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:inherit;}
+    .btn-primary{background:var(--primary);color:#fff;}
+    .btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,.35);}
+    .btn-outline{background:var(--surface);color:var(--text);border:1px solid var(--border);}
+    .btn-outline:hover{background:var(--primary-light);color:var(--primary);border-color:var(--primary);}
+    .btn-danger{background:#fee2e2;color:#ef4444;border:1px solid #fecaca;}
+    .btn-danger:hover{background:#ef4444;color:#fff;border-color:#ef4444;}
+    .btn-success{background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;}
+    .btn-success:hover{background:#16a34a;color:#fff;}
+    .btn svg{width:14px;height:14px;}
+
+    /* STAT CARDS */
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:18px;display:flex;align-items:center;gap:14px;transition:all .2s;cursor:default;}
+    .stat-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.08);}
+    .stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .stat-icon svg{width:24px;height:24px;}
+    .stat-label{font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:3px;}
+    .stat-value{font-size:24px;font-weight:800;line-height:1;}
+    .stat-trend{font-size:11px;margin-top:3px;}
+    .trend-up{color:#22c55e;}
+    .trend-down{color:#ef4444;}
+
+    /* CHARTS */
+    .charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:20px;}
+    .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:20px;}
+    .chart-title{font-size:14px;font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:7px;}
+    .chart-title svg{width:16px;height:16px;color:var(--primary);}
+    .chart-sub{font-size:11px;color:var(--text-muted);margin-bottom:16px;}
+    canvas{max-height:210px;}
+
+    /* TABLE CARD */
+    .table-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;}
+    .table-toolbar{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+    .t-search{display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 11px;font-size:12px;flex:1;max-width:260px;}
+    .t-search svg{width:14px;height:14px;color:var(--text-muted);flex-shrink:0;}
+    .t-search input{border:none;background:none;outline:none;font-size:12px;color:var(--text);width:100%;font-family:inherit;}
+    .filter-select{padding:7px 11px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font-size:12px;color:var(--text);outline:none;cursor:pointer;font-family:inherit;}
+    table{width:100%;border-collapse:collapse;font-size:12.5px;}
+    thead{background:var(--bg);}
+    th{padding:11px 15px;text-align:left;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);border-bottom:1px solid var(--border);}
+    td{padding:13px 15px;border-bottom:1px solid var(--border);vertical-align:middle;}
+    tr:last-child td{border-bottom:none;}
+    tbody tr{transition:background .1s;}
+    tbody tr:hover{background:var(--primary-light);}
+    .mono{font-family:'Courier New',monospace;font-size:11px;padding:2px 7px;background:var(--bg);border-radius:5px;color:var(--text-muted);border:1px solid var(--border);}
+    .p-cell{display:flex;align-items:center;gap:9px;}
+    .p-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;color:#fff;}
+    .p-name{font-weight:600;font-size:13px;}
+
+    /* BADGES */
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600;}
+    .badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;}
+    .badge-admitted{background:#dbeafe;color:#1d4ed8;}
+    .badge-discharged{background:#dcfce7;color:#15803d;}
+    .badge-critical{background:#fee2e2;color:#b91c1c;}
+    .badge-pending{background:#fef9c3;color:#a16207;}
+    .badge-active{background:#dcfce7;color:#15803d;}
+    .badge-inactive{background:#f1f5f9;color:#64748b;}
+    .badge-on_leave{background:#fef3c7;color:#d97706;}
+    .badge-doctor{background:#dbeafe;color:#1d4ed8;}
+    .badge-nurse{background:#fce7f3;color:#9d174d;}
+    .badge-receptionist{background:#dcfce7;color:#166534;}
+    .badge-pharmacist{background:#f3e8ff;color:#7e22ce;}
+    .badge-technician{background:#ffedd5;color:#c2410c;}
+    .badge-admin_staff{background:#f1f5f9;color:#475569;}
+
+    /* ACTION BUTTONS */
+    .action-btns{display:flex;align-items:center;gap:3px;justify-content:flex-end;}
+    .act{width:28px;height:28px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;background:var(--bg);color:var(--text-muted);}
+    .act:hover{transform:scale(1.1);}
+    .act.v:hover{background:#dbeafe;color:#1d4ed8;}
+    .act.e:hover{background:#fef3c7;color:#d97706;}
+    .act.d:hover{background:#fee2e2;color:#ef4444;}
+    .act svg{width:14px;height:14px;}
+
+    /* PAGINATION */
+    .pagination{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted);}
+    .page-btns{display:flex;gap:4px;}
+    .pg{min-width:32px;height:32px;padding:0 8px;border-radius:7px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:12px;font-weight:500;color:var(--text);transition:all .15s;font-family:inherit;}
+    .pg:hover{background:var(--primary-light);color:var(--primary);border-color:var(--primary);}
+    .pg.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+    .pg:disabled{opacity:.4;cursor:not-allowed;}
+
+    /* ACTIVITY */
+    .act-item{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:1px solid var(--border);}
+    .act-item:last-child{border-bottom:none;}
+    .act-dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;}
+    .act-text{font-size:12.5px;}
+    .act-text strong{font-weight:600;}
+    .act-time{font-size:11px;color:var(--text-muted);margin-top:2px;}
+
+    /* DETAIL MODAL (View Patient) */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s;}
+    .overlay.open{opacity:1;pointer-events:all;}
+    .overlay-panel{background:var(--surface);border-radius:16px;width:100%;max-width:640px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;transform:scale(.95);transition:transform .25s;}
+    .overlay.open .overlay-panel{transform:scale(1);}
+    .overlay-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);}
+    .overlay-head h3{font-size:16px;font-weight:700;}
+    .overlay-body{padding:22px;overflow-y:auto;flex:1;}
+    .overlay-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:9px;justify-content:flex-end;}
+    .close-btn{width:30px;height:30px;border-radius:7px;border:none;cursor:pointer;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;}
+    .close-btn svg{width:16px;height:16px;}
+
+    /* SLIDE PANEL (Edit/Add) */
+    .slide-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;justify-content:flex-end;opacity:0;pointer-events:none;transition:opacity .25s;}
+    .slide-overlay.open{opacity:1;pointer-events:all;}
+    .slide-panel{width:420px;height:100vh;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.25,.46,.45,.94);}
+    .slide-overlay.open .slide-panel{transform:translateX(0);}
+    .slide-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1;}
+    .slide-head h3{font-size:16px;font-weight:700;}
+    .slide-body{flex:1;overflow-y:auto;padding:22px;}
+    .slide-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:9px;justify-content:flex-end;}
+
+    /* FORM */
+    .fg{margin-bottom:14px;}
+    .fg label{display:block;font-size:12px;font-weight:600;margin-bottom:5px;color:var(--text);}
+    .fi{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--surface);color:var(--text);transition:border-color .2s,box-shadow .2s;font-family:inherit;}
+    .fi:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+    .f-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+    /* CONFIRM DELETE */
+    .confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s;}
+    .confirm-overlay.open{opacity:1;pointer-events:all;}
+    .confirm-box{background:var(--surface);border-radius:14px;padding:28px;max-width:380px;width:100%;text-align:center;transform:scale(.9);transition:transform .2s;}
+    .confirm-overlay.open .confirm-box{transform:scale(1);}
+    .confirm-icon{width:56px;height:56px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+    .confirm-icon svg{width:28px;height:28px;color:#ef4444;}
+    .confirm-box h3{font-size:17px;font-weight:700;margin-bottom:8px;}
+    .confirm-box p{font-size:13px;color:var(--text-muted);margin-bottom:22px;line-height:1.5;}
+    .confirm-btns{display:flex;gap:10px;justify-content:center;}
+
+    /* PATIENT DETAIL CARD */
+    .detail-hero{display:flex;align-items:center;gap:16px;margin-bottom:20px;padding:18px;background:var(--bg);border-radius:12px;}
+    .detail-av{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0;}
+    .detail-name{font-size:18px;font-weight:800;margin-bottom:5px;}
+    .detail-badges{display:flex;gap:6px;flex-wrap:wrap;}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+    .info-field label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:3px;}
+    .info-field p{font-size:13px;font-weight:500;}
+    .info-section{margin-bottom:16px;}
+    .info-section-title{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+    .notes-box{background:var(--bg);border-radius:8px;padding:12px;font-size:13px;line-height:1.6;color:var(--text);}
+
+    /* LOGIN */
+    .login-page{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;}
+    .login-left{background:linear-gradient(135deg,#1e3a8a,#2563eb,#3b82f6);display:flex;align-items:center;justify-content:center;padding:48px;position:relative;overflow:hidden;}
+    .login-left::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");}
+    .login-hero{position:relative;z-index:1;color:#fff;max-width:360px;}
+    .login-hero-icon{width:68px;height:68px;background:rgba(255,255,255,.15);border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;backdrop-filter:blur(10px);}
+    .login-hero-icon svg{width:36px;height:36px;}
+    .login-hero h1{font-size:30px;font-weight:800;line-height:1.2;margin-bottom:12px;}
+    .login-hero p{font-size:14px;opacity:.85;line-height:1.6;}
+    .login-features{margin-top:28px;display:flex;flex-direction:column;gap:10px;}
+    .login-feature{display:flex;align-items:center;gap:9px;font-size:13px;opacity:.9;}
+    .login-feature-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.7);flex-shrink:0;}
+    .login-right{display:flex;align-items:center;justify-content:center;padding:48px;background:var(--bg);}
+    .login-form-wrap{width:100%;max-width:370px;}
+    .login-form-logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:20px;color:var(--primary);margin-bottom:28px;}
+    .login-form-logo svg{width:30px;height:30px;}
+    .login-greeting{font-size:24px;font-weight:800;margin-bottom:5px;}
+    .login-sub{font-size:13px;color:var(--text-muted);margin-bottom:26px;}
+    .form-group{margin-bottom:16px;}
+    .form-label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;}
+    .form-input{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--surface);color:var(--text);transition:border-color .2s,box-shadow .2s;font-family:inherit;}
+    .form-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+    .form-input-wrap{position:relative;}
+    .form-input-wrap .eye-btn{position:absolute;right:11px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);}
+    .form-input-wrap .eye-btn svg{width:17px;height:17px;}
+    .form-check{display:flex;align-items:center;gap:7px;font-size:13px;margin-bottom:20px;}
+    .form-check input{width:14px;height:14px;accent-color:var(--primary);cursor:pointer;}
+    .login-btn{width:100%;padding:11px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;}
+    .login-btn:hover{background:var(--primary-dark);transform:translateY(-1px);box-shadow:0 6px 18px rgba(37,99,235,.38);}
+    .demo-hint{margin-top:16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:11px 15px;font-size:12px;color:#1d4ed8;text-align:center;line-height:1.6;}
+    .dark .demo-hint{background:#1e3a5f;border-color:#2563eb44;color:#93c5fd;}
+
+    /* SETTINGS */
+    .settings-grid{display:grid;gap:14px;max-width:600px;}
+    .settings-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:20px;}
+    .settings-card h3{font-size:14px;font-weight:700;margin-bottom:3px;}
+    .settings-card p{font-size:12.5px;color:var(--text-muted);margin-bottom:16px;}
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;}
+    .toggle{width:44px;height:24px;border-radius:12px;background:var(--border);position:relative;cursor:pointer;transition:background .2s;border:none;}
+    .toggle.on{background:var(--primary);}
+    .toggle::after{content:'';width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:4px;left:4px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+    .toggle.on::after{transform:translateX(20px);}
+
+    /* REPORT TABS */
+    .tabs{display:flex;gap:2px;background:var(--bg);border-radius:9px;padding:4px;border:1px solid var(--border);width:fit-content;margin-bottom:18px;}
+    .tab{padding:6px 16px;border-radius:6px;font-size:12.5px;font-weight:500;cursor:pointer;color:var(--text-muted);transition:all .15s;border:none;background:none;font-family:inherit;}
+    .tab.active{background:var(--surface);color:var(--text);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+    .report-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:18px;}
+    .r-stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+    .r-stat-val{font-size:22px;font-weight:800;}
+    .r-stat-lbl{font-size:11px;color:var(--text-muted);margin-top:2px;}
+    .export-row{display:flex;gap:8px;margin-bottom:18px;}
+
+    /* TOAST */
+    .toast-container{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:7px;}
+    .toast{display:flex;align-items:center;gap:9px;padding:11px 16px;border-radius:9px;font-size:13px;font-weight:500;min-width:240px;max-width:320px;box-shadow:0 6px 20px rgba(0,0,0,.14);animation:slideT .25s ease;}
+    @keyframes slideT{from{opacity:0;transform:translateX(80px);}to{opacity:1;transform:translateX(0);}}
+    .toast-success{background:#166534;color:#fff;}
+    .toast-error{background:#b91c1c;color:#fff;}
+    .toast-info{background:#1d4ed8;color:#fff;}
+    .toast svg{width:16px;height:16px;flex-shrink:0;}
+    .toast-close{margin-left:auto;opacity:.7;cursor:pointer;font-size:17px;line-height:1;}
+
+    /* PROFILE */
+    .profile-layout{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start;}
+    .profile-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;text-align:center;}
+    .profile-big-av{width:80px;height:80px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;background:linear-gradient(135deg,#2563eb,#7c3aed);}
+    .profile-name{font-size:18px;font-weight:800;margin-bottom:5px;}
+    .profile-mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px;}
+    .pms{background:var(--bg);border-radius:9px;padding:11px;text-align:center;}
+    .pms-val{font-size:16px;font-weight:700;}
+    .pms-lbl{font-size:10px;color:var(--text-muted);margin-top:2px;}
+    .profile-info-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;}
+    .pic-title{font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+    .pic-title svg{width:15px;height:15px;color:var(--primary);}
+    .f-row-3{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+    @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}}
+
+    /* LOGIN ERROR & SHAKE */
+    .login-error{display:none;align-items:center;gap:9px;background:#fee2e2;border:1px solid #fecaca;border-radius:8px;padding:11px 14px;font-size:13px;color:#b91c1c;font-weight:500;margin-bottom:16px;}
+    .login-error.show{display:flex;animation:fadeUp .25s ease;}
+    .login-error svg{width:16px;height:16px;flex-shrink:0;}
+    .login-lockout{display:none;align-items:center;gap:9px;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:11px 14px;font-size:13px;color:#92400e;font-weight:500;margin-bottom:16px;}
+    .login-lockout.show{display:flex;}
+    .login-lockout svg{width:16px;height:16px;flex-shrink:0;}
+    @keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-8px)}30%{transform:translateX(8px)}45%{transform:translateX(-6px)}60%{transform:translateX(6px)}75%{transform:translateX(-4px)}90%{transform:translateX(4px)}}
+    .shake{animation:shake .5s ease;}
+    .staff-hidden{display:none!important;}
+  </style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══════════════════════════════════════════ -->
+<div id="loginPage" class="login-page">
+  <div class="login-left">
+    <div class="login-hero">
+      <div class="login-hero-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+      </div>
+      <h1>Hospital Management System</h1>
+      <p>A professional, all-in-one platform for managing patients, staff, and medical records with precision and care.</p>
+      <div class="login-features">
+        <div class="login-feature"><div class="login-feature-dot"></div>Real-time patient tracking &amp; admissions</div>
+        <div class="login-feature"><div class="login-feature-dot"></div>Role-based access control (Admin &amp; Staff)</div>
+        <div class="login-feature"><div class="login-feature-dot"></div>Advanced analytics &amp; reporting dashboard</div>
+        <div class="login-feature"><div class="login-feature-dot"></div>Secure JWT auth &amp; full audit trail</div>
+      </div>
+    </div>
+  </div>
+  <div class="login-right">
+    <div class="login-form-wrap">
+      <div class="login-form-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        HMS
+      </div>
+      <div class="login-greeting">Welcome back 👋</div>
+      <div class="login-sub">Sign in to your HMS account to continue.</div>
+      <form onsubmit="doLogin(event)">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input id="usernameInput" class="form-input" type="text" value="admin" placeholder="Enter username" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="display:flex;justify-content:space-between">Password <a href="#" style="font-weight:500;color:var(--primary);font-size:11px">Forgot?</a></label>
+          <div class="form-input-wrap">
+            <input id="passwordInput" class="form-input" type="password" value="Admin@123" placeholder="Enter password" style="padding-right:42px" required />
+            <button type="button" class="eye-btn" onclick="togglePw()">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </button>
+          </div>
+        </div>
+        <!-- ERROR ALERTS -->
+        <div class="login-error" id="loginError">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="loginErrorMsg">Invalid username or password.</span>
+        </div>
+        <div class="login-lockout" id="loginLockout">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          <span id="loginLockoutMsg">Too many failed attempts. Locked for <strong id="lockTimer">30</strong>s.</span>
+        </div>
+        <div class="form-check"><input type="checkbox" id="remember" checked /><label for="remember">Remember me</label></div>
+        <button class="login-btn" type="submit" id="loginBtn">Sign In</button>
+        <div style="margin-top:12px;font-size:11px;color:var(--text-muted);text-align:center" id="attemptsLeft"></div>
+      </form>
+      <div class="demo-hint"><strong>Demo Credentials</strong><br/>Admin: <code>admin</code> / <code>Admin@123</code> &nbsp;·&nbsp; Staff: <code>staff</code> / <code>Staff@123</code></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP SHELL ════════════════════════════════════════ -->
+<div id="appShell" style="display:none">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#2563eb"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+    <div><div>HMS</div><small>Hospital Management</small></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Main Menu</div>
+    <button class="nav-item active" onclick="switchView('dashboard',this)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="2"/></svg>Dashboard</button>
+    <button class="nav-item" onclick="switchView('patients',this)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Patients</button>
+    <button class="nav-item" onclick="switchView('admissions',this)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>Admissions</button>
+    <button class="nav-item" onclick="switchView('discharge',this)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Discharge</button>
+    <div class="nav-label" style="margin-top:8px">Management</div>
+    <button class="nav-item" onclick="switchView('staff',this)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>Staff</button>
+    <button class="nav-item" onclick="switchView('reports',this)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Reports</button>
+    <div class="nav-label" style="margin-top:8px">Account</div>
+    <button class="nav-item" onclick="switchView('profile',this)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Profile</button>
+    <button class="nav-item" onclick="switchView('settings',this)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>Settings</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="av" id="sbAvatar">A</div>
+    <div class="av-info"><div class="av-name" id="sbName">admin</div><div class="av-role" id="sbRole">Administrator</div></div>
+    <button class="logout-btn" onclick="doLogout()" title="Logout"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="17" height="17"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+  </div>
+</aside>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-title" id="headerTitle">Dashboard</div>
+  <div class="search-bar" style="cursor:text" onclick="document.getElementById('headerSearch').focus()">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    <input id="headerSearch" type="text" placeholder="Search patients, staff..." style="border:none;background:none;outline:none;font-size:12px;color:var(--text);width:100%;font-family:inherit" oninput="headerSearchHandler(this.value)" />
+  </div>
+  <div class="header-actions">
+    <div style="position:relative">
+      <button class="icon-btn notif-badge" id="notifBtn" title="Notifications" onclick="toggleNotifPanel()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+      </button>
+      <!-- NOTIFICATION DROPDOWN -->
+      <div id="notifPanel" style="display:none;position:absolute;top:44px;right:0;width:320px;background:var(--surface);border:1px solid var(--border);border-radius:13px;box-shadow:0 10px 36px rgba(0,0,0,.18);z-index:500;overflow:hidden;animation:fadeUp .2s ease">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:14px;font-weight:700">Notifications</span>
+          <span style="font-size:11px;color:var(--primary);cursor:pointer;font-weight:600" onclick="markAllRead()">Mark all read</span>
+        </div>
+        <div id="notifList" style="max-height:320px;overflow-y:auto"></div>
+        <div style="padding:11px 16px;border-top:1px solid var(--border);text-align:center;font-size:12px;color:var(--primary);cursor:pointer;font-weight:600" onclick="toggleNotifPanel()">View all notifications</div>
+      </div>
+    </div>
+    <button class="icon-btn" onclick="toggleDark()" id="themeBtn" title="Toggle dark mode"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg></button>
+    <div class="av" id="headerAvatar" style="width:32px;height:32px;font-size:12px;cursor:pointer">A</div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- DASHBOARD -->
+<div id="view-dashboard" class="view active">
+  <div class="page-header">
+    <div><div class="page-title" id="dashGreeting">Good evening, admin! 👋</div><div class="page-sub">Here's your hospital overview for today.</div></div>
+    <div style="display:flex;gap:9px">
+      <button class="btn btn-outline" onclick="openAddPatient()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Add Patient</button>
+      <button class="btn btn-primary" onclick="openAddStaff()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Add Staff</button>
+    </div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#2563eb"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div><div><div class="stat-label">Total Patients</div><div class="stat-value" id="ds-total">25</div><div class="stat-trend trend-up">↑ 12% this month</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#e0e7ff"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#4f46e5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 10V11"/></svg></div><div><div class="stat-label">Admitted</div><div class="stat-value" id="ds-admitted">—</div><div class="stat-trend trend-up">↑ 8% this week</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#16a34a"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><div class="stat-label">Discharged</div><div class="stat-value" id="ds-discharged">—</div><div class="stat-trend trend-up">↑ 5% this month</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fee2e2"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#dc2626"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div><div><div class="stat-label">Critical</div><div class="stat-value" id="ds-critical">—</div><div class="stat-trend trend-down">↓ Needs attention</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#f3e8ff"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#9333ea"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg></div><div><div class="stat-label">Total Staff</div><div class="stat-value">10</div><div class="stat-trend" style="color:var(--text-muted)">Active members</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#cffafe"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#0891b2"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg></div><div><div class="stat-label">Doctors</div><div class="stat-value">4</div><div class="stat-trend" style="color:var(--text-muted)">On duty today</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#db2777"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg></div><div><div class="stat-label">Nurses</div><div class="stat-value">4</div><div class="stat-trend" style="color:var(--text-muted)">On shift</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#ffedd5"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#ea580c"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg></div><div><div class="stat-label">Receptionists</div><div class="stat-value">1</div><div class="stat-trend" style="color:var(--text-muted)">Front desk</div></div></div>
+  </div>
+  <div class="charts-grid">
+    <div class="chart-card"><div class="chart-title"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>Monthly Admissions</div><div class="chart-sub">Patient admissions over the last 12 months</div><canvas id="admissionsChart"></canvas></div>
+    <div class="chart-card"><div class="chart-title"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>Staff Distribution</div><div class="chart-sub">Active staff by role</div><canvas id="staffChart"></canvas></div>
+  </div>
+  <div class="chart-card"><div class="chart-title" style="margin-bottom:3px"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Recent Activity</div><div class="chart-sub" style="margin-bottom:14px">Latest actions across the system</div>
+    <div id="recentActivityList">
+      <!-- Dynamically generated from real patient/staff data on login -->
+    </div>
+  </div>
+</div>
+
+<!-- PATIENTS -->
+<div id="view-patients" class="view">
+  <div class="page-header"><div><div class="page-title">Patients</div><div class="page-sub">Manage all patient records</div></div><button class="btn btn-primary" onclick="openAddPatient()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Add Patient</button></div>
+  <div class="table-card">
+    <div class="table-toolbar">
+      <div class="t-search"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><input type="text" placeholder="Search by name, ID, disease..." oninput="patientSearch(this.value)" id="patSearchInput" /></div>
+      <select class="filter-select" onchange="patientStatusFilter(this.value)" id="patStatusFilter"><option value="">All Statuses</option><option>ADMITTED</option><option>DISCHARGED</option><option>CRITICAL</option><option>PENDING</option></select>
+      <span style="margin-left:auto;font-size:12px;color:var(--text-muted)">Showing <strong id="patientCount">25</strong> of <strong id="patientTotal">25</strong></span>
+    </div>
+    <table><thead><tr><th>Patient ID</th><th>Name</th><th>Age / Gender</th><th>Disease</th><th>Doctor</th><th>Room</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead>
+    <tbody id="patientTbody"></tbody></table>
+    <div class="pagination"><span id="patPageInfo">Page 1 of 3</span><div class="page-btns" id="patPageBtns"></div></div>
+  </div>
+</div>
+
+<!-- ADMISSIONS -->
+<div id="view-admissions" class="view">
+  <div class="page-header"><div><div class="page-title">Current Admissions</div><div class="page-sub">All currently admitted &amp; critical patients</div></div></div>
+  <div class="table-card">
+    <div class="table-toolbar"><div class="t-search"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><input type="text" placeholder="Search admitted patients..." /></div><span style="margin-left:auto;font-size:12px;color:var(--text-muted)">Showing <strong id="admCount">—</strong> patients</span></div>
+    <table><thead><tr><th>Patient ID</th><th>Name</th><th>Disease</th><th>Doctor</th><th>Room</th><th>Admitted On</th><th>Status</th><th style="text-align:right">Action</th></tr></thead><tbody id="admTbody"></tbody></table>
+  </div>
+</div>
+
+<!-- DISCHARGE -->
+<div id="view-discharge" class="view">
+  <div class="page-header"><div><div class="page-title">Discharged Patients</div><div class="page-sub">Patients who have completed their treatment</div></div><button class="btn btn-primary" onclick="openAddPatient()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Add Patient</button></div>
+  <div class="table-card">
+    <div class="table-toolbar"><div class="t-search"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><input type="text" placeholder="Search discharged patients..." /></div><span style="margin-left:auto;font-size:12px;color:var(--text-muted)">Showing <strong id="disCount">—</strong> patients</span></div>
+    <table><thead><tr><th>Patient ID</th><th>Name</th><th>Disease</th><th>Doctor</th><th>Room</th><th>Admitted</th><th>Discharged</th><th>Days Stay</th></tr></thead><tbody id="disTbody"></tbody></table>
+  </div>
+</div>
+
+<!-- STAFF -->
+<div id="view-staff" class="view">
+  <div class="page-header"><div><div class="page-title">Staff Management</div><div class="page-sub">Manage hospital staff and roles</div></div><button class="btn btn-primary" onclick="openAddStaff()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Add Staff</button></div>
+  <div class="table-card">
+    <div class="table-toolbar"><div class="t-search"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><input type="text" placeholder="Search staff..." oninput="staffSearch(this.value)" /></div><select class="filter-select"><option value="">All Roles</option><option>DOCTOR</option><option>NURSE</option><option>RECEPTIONIST</option><option>PHARMACIST</option></select><select class="filter-select"><option value="">All Statuses</option><option>ACTIVE</option><option>ON_LEAVE</option><option>INACTIVE</option></select><span style="margin-left:auto;font-size:12px;color:var(--text-muted)">Showing <strong id="staffCount">10</strong> staff</span></div>
+    <table><thead><tr><th>Employee ID</th><th>Name</th><th>Role</th><th>Department</th><th>Phone</th><th>Email</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead><tbody id="staffTbody"></tbody></table>
+    <div class="pagination"><span id="staffPageInfo">Page 1 of 1</span><div class="page-btns" id="staffPageBtns"></div></div>
+  </div>
+</div>
+
+<!-- REPORTS -->
+<div id="view-reports" class="view">
+  <div class="page-header"><div><div class="page-title">Reports &amp; Analytics</div><div class="page-sub">Generate and export detailed reports</div></div></div>
+  <div class="tabs"><button class="tab active" onclick="switchRptTab(this,'rpt-patients')">Patient Report</button><button class="tab" onclick="switchRptTab(this,'rpt-staff')">Staff Report</button><button class="tab" onclick="switchRptTab(this,'rpt-admissions')">Admissions</button><button class="tab" onclick="switchRptTab(this,'rpt-discharges')">Discharges</button></div>
+  <div id="rpt-patients"><div class="report-stats"><div class="r-stat"><div class="r-stat-val" style="color:#2563eb" id="rpt-total">25</div><div class="r-stat-lbl">Total Patients</div></div><div class="r-stat"><div class="r-stat-val" style="color:#7c3aed" id="rpt-adm">—</div><div class="r-stat-lbl">Admitted</div></div><div class="r-stat"><div class="r-stat-val" style="color:#16a34a" id="rpt-dis">—</div><div class="r-stat-lbl">Discharged</div></div><div class="r-stat"><div class="r-stat-val" style="color:#dc2626" id="rpt-crit">—</div><div class="r-stat-lbl">Critical</div></div></div><div class="export-row"><button class="btn" style="background:#fee2e2;color:#b91c1c" onclick="toast('PDF export is available in the live app','info')">📄 Export PDF</button><button class="btn" style="background:#dcfce7;color:#166534" onclick="toast('Excel export is available in the live app','info')">📊 Export Excel</button><button class="btn" style="background:#dbeafe;color:#1d4ed8" onclick="toast('CSV export is available in the live app','info')">📋 Export CSV</button></div><div class="table-card"><table><thead><tr><th>Patient ID</th><th>Name</th><th>Disease</th><th>Doctor</th><th>Status</th><th>Admitted</th></tr></thead><tbody id="rptPatTbody"></tbody></table></div></div>
+  <div id="rpt-staff" style="display:none"><div class="report-stats"><div class="r-stat"><div class="r-stat-val" style="color:#2563eb">10</div><div class="r-stat-lbl">Total Staff</div></div><div class="r-stat"><div class="r-stat-val" style="color:#0891b2">4</div><div class="r-stat-lbl">Doctors</div></div><div class="r-stat"><div class="r-stat-val" style="color:#db2777">4</div><div class="r-stat-lbl">Nurses</div></div><div class="r-stat"><div class="r-stat-val" style="color:#16a34a">1</div><div class="r-stat-lbl">Receptionists</div></div></div><div class="export-row"><button class="btn" style="background:#fee2e2;color:#b91c1c" onclick="toast('PDF export in live app','info')">📄 Export PDF</button><button class="btn" style="background:#dcfce7;color:#166534" onclick="toast('Excel export in live app','info')">📊 Excel</button></div><div class="table-card"><table><thead><tr><th>Employee ID</th><th>Name</th><th>Role</th><th>Department</th><th>Status</th></tr></thead><tbody id="rptStaffTbody"></tbody></table></div></div>
+  <div id="rpt-admissions" style="display:none"><div class="report-stats"><div class="r-stat"><div class="r-stat-val" style="color:#2563eb" id="rpt-adm2">—</div><div class="r-stat-lbl">Current Admissions</div></div><div class="r-stat"><div class="r-stat-val" style="color:#dc2626" id="rpt-crit2">—</div><div class="r-stat-lbl">Critical</div></div><div class="r-stat"><div class="r-stat-val" style="color:#d97706">8</div><div class="r-stat-lbl">This Week</div></div><div class="r-stat"><div class="r-stat-val" style="color:#7c3aed">25</div><div class="r-stat-lbl">This Month</div></div></div><div class="table-card"><table><thead><tr><th>Patient ID</th><th>Name</th><th>Disease</th><th>Doctor</th><th>Room</th><th>Admitted On</th></tr></thead><tbody id="rptAdmTbody"></tbody></table></div></div>
+  <div id="rpt-discharges" style="display:none"><div class="report-stats"><div class="r-stat"><div class="r-stat-val" style="color:#16a34a" id="rpt-dis2">—</div><div class="r-stat-lbl">Total Discharged</div></div><div class="r-stat"><div class="r-stat-val" style="color:#2563eb">8</div><div class="r-stat-lbl">This Month</div></div><div class="r-stat"><div class="r-stat-val" style="color:#7c3aed">3</div><div class="r-stat-lbl">This Week</div></div><div class="r-stat"><div class="r-stat-val" style="color:#0891b2">5.8</div><div class="r-stat-lbl">Avg Stay (days)</div></div></div><div class="table-card"><table><thead><tr><th>Patient ID</th><th>Name</th><th>Disease</th><th>Doctor</th><th>Admitted</th><th>Discharged</th></tr></thead><tbody id="rptDisTbody"></tbody></table></div></div>
+</div>
+
+<!-- PROFILE -->
+<div id="view-profile" class="view">
+  <div class="page-header">
+    <div><div class="page-title">My Profile</div><div class="page-sub">View and manage your account</div></div>
+  </div>
+  <div class="profile-layout">
+    <!-- LEFT CARD -->
+    <div class="profile-card">
+      <div class="profile-big-av" id="profAvatar">A</div>
+      <div class="profile-name" id="profName">admin</div>
+      <div style="margin-bottom:8px"><span class="badge badge-admitted" style="font-size:11px" id="profRoleBadge">Administrator</span></div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px" id="profEmail">admin@hms.com</div>
+      <div class="profile-mini-stats">
+        <div class="pms"><div class="pms-val" id="profPatCount">—</div><div class="pms-lbl">Total Patients</div></div>
+        <div class="pms"><div class="pms-val" id="profStaffCount">—</div><div class="pms-lbl">Total Staff</div></div>
+      </div>
+      <!-- LOGOUT BUTTON -->
+      <button onclick="doLogout()" style="margin-top:18px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:9px;border:1.5px solid #ef4444;background:#fff1f2;color:#dc2626;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff1f2'">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Sign Out
+      </button>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <!-- ACCOUNT INFO CARD -->
+      <div class="profile-info-card">
+        <div class="pic-title">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Account Information
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div><div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Username</div><div style="font-size:13px;font-weight:600" id="profInfoUsername">admin</div></div>
+          <div><div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Role</div><div style="font-size:13px;font-weight:600" id="profInfoRole">Administrator</div></div>
+          <div><div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Email</div><div style="font-size:13px;font-weight:600" id="profInfoEmail">admin@hms.com</div></div>
+          <div><div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Status</div><div style="font-size:13px;font-weight:600;color:#16a34a">● Active</div></div>
+        </div>
+      </div>
+
+      <!-- CHANGE PASSWORD CARD -->
+      <div class="profile-info-card">
+        <div class="pic-title">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Change Password
+        </div>
+
+        <!-- Inline error/success for password form -->
+        <div id="pwError" style="display:none;align-items:center;gap:8px;background:#fee2e2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:12.5px;color:#b91c1c;font-weight:500;margin-bottom:14px">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="pwErrorMsg">Error</span>
+        </div>
+        <div id="pwSuccess" style="display:none;align-items:center;gap:8px;background:#dcfce7;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;font-size:12.5px;color:#166534;font-weight:500;margin-bottom:14px">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Password updated successfully! Use your new password next time you log in.</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="fg" style="margin:0">
+            <label>Current Password <span style="color:#ef4444">*</span></label>
+            <input class="fi" id="pw-current" type="password" placeholder="Enter your current password" oninput="hidePwFeedback()" />
+          </div>
+          <div class="f-row-3">
+            <div class="fg" style="margin:0">
+              <label>New Password <span style="color:#ef4444">*</span></label>
+              <input class="fi" id="pw-new" type="password" placeholder="Min. 8 chars" oninput="hidePwFeedback();checkPwStrength(this.value)" />
+              <!-- Strength bar -->
+              <div id="pwStrengthBar" style="margin-top:6px;height:4px;border-radius:4px;background:#e2e8f0;overflow:hidden;display:none">
+                <div id="pwStrengthFill" style="height:100%;width:0%;border-radius:4px;transition:width .3s,background .3s"></div>
+              </div>
+              <div id="pwStrengthLabel" style="font-size:10px;margin-top:3px;color:var(--text-muted)"></div>
+            </div>
+            <div class="fg" style="margin:0">
+              <label>Confirm New Password <span style="color:#ef4444">*</span></label>
+              <input class="fi" id="pw-confirm" type="password" placeholder="Repeat new password" oninput="hidePwFeedback()" />
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button class="btn btn-primary" onclick="changePassword()" id="pwUpdateBtn">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Update Password
+            </button>
+            <button class="btn btn-outline" onclick="clearPwForm()">Clear</button>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);line-height:1.6">
+            Password must be at least <strong>8 characters</strong>, contain an <strong>uppercase letter</strong> and a <strong>number</strong>.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /right panel -->
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="view-settings" class="view">
+  <div class="page-header"><div><div class="page-title">Settings</div><div class="page-sub">Manage your preferences</div></div></div>
+  <div class="settings-grid">
+    <div class="settings-card"><h3>Appearance</h3><p>Switch between light and dark mode for the dashboard interface.</p><div class="toggle-row"><span style="font-size:13px;font-weight:600">Dark Mode</span><button class="toggle" id="settingsToggle" onclick="toggleDark()"></button></div></div>
+    <div class="settings-card"><h3>Session Security</h3><p>Your session will automatically time out after <strong>15 minutes</strong> of inactivity to keep your data secure.</p><div style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:#16a34a;font-weight:500"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Session protection active</div></div>
+    <div class="settings-card"><h3>About HMS</h3><p>Hospital Management System — Production-ready healthcare dashboard built with React, Node.js, PostgreSQL &amp; Prisma.</p><div style="font-size:11px;color:var(--text-muted)">Version 1.0.0 · Built with React + Node.js · PostgreSQL + Prisma ORM</div></div>
+  </div>
+</div>
+
+</main>
+</div><!-- /appShell -->
+
+<!-- ══ VIEW PATIENT MODAL ════════════════════════════════ -->
+<div id="viewPatientOverlay" class="overlay">
+  <div class="overlay-panel">
+    <div class="overlay-head"><h3>Patient Details</h3><button class="close-btn" onclick="closeOverlay('viewPatientOverlay')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="overlay-body" id="viewPatientBody"></div>
+    <div class="overlay-foot" id="viewPatientFoot"></div>
+  </div>
+</div>
+
+<!-- ══ ADD / EDIT PATIENT PANEL ═════════════════════════ -->
+<div id="patientSlide" class="slide-overlay">
+  <div class="slide-panel">
+    <div class="slide-head"><h3 id="patSlideTitle">Add New Patient</h3><button class="close-btn" onclick="closeSlide('patientSlide')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="slide-body">
+      <input type="hidden" id="editPatIdx" value="-1" />
+      <div class="f-row"><div class="fg"><label>First Name *</label><input class="fi" id="pf-firstName" placeholder="James" /></div><div class="fg"><label>Last Name *</label><input class="fi" id="pf-lastName" placeholder="Smith" /></div></div>
+      <div class="f-row"><div class="fg"><label>Gender *</label><select class="fi" id="pf-gender"><option>MALE</option><option>FEMALE</option><option>OTHER</option></select></div><div class="fg"><label>Age *</label><input class="fi" id="pf-age" type="number" placeholder="35" /></div></div>
+      <div class="f-row"><div class="fg"><label>Phone *</label><input class="fi" id="pf-phone" placeholder="555-0101" /></div><div class="fg"><label>Blood Group</label><select class="fi" id="pf-blood"><option>A_POS</option><option>A_NEG</option><option>B_POS</option><option>B_NEG</option><option>AB_POS</option><option>AB_NEG</option><option>O_POS</option><option>O_NEG</option></select></div></div>
+      <div class="fg"><label>Disease / Condition *</label><input class="fi" id="pf-disease" placeholder="Hypertension" /></div>
+      <div class="fg"><label>Assigned Doctor *</label><input class="fi" id="pf-doctor" placeholder="Dr. James Wilson" /></div>
+      <div class="f-row"><div class="fg"><label>Room Number</label><input class="fi" id="pf-room" placeholder="101" /></div><div class="fg"><label>Status</label><select class="fi" id="pf-status"><option>ADMITTED</option><option>PENDING</option><option>CRITICAL</option><option>DISCHARGED</option></select></div></div>
+      <div class="fg"><label>Emergency Contact Name</label><input class="fi" id="pf-ecName" placeholder="Jane Smith" /></div>
+      <div class="fg"><label>Emergency Contact Phone</label><input class="fi" id="pf-ecPhone" placeholder="555-0199" /></div>
+      <div class="fg"><label>Address</label><input class="fi" id="pf-address" placeholder="123 Main St, City" /></div>
+      <div class="fg"><label>Medical Notes</label><textarea class="fi" id="pf-notes" rows="3" placeholder="Patient notes..."></textarea></div>
+    </div>
+    <div class="slide-foot"><button class="btn btn-outline" onclick="closeSlide('patientSlide')">Cancel</button><button class="btn btn-primary" onclick="savePatient()">Save Patient</button></div>
+  </div>
+</div>
+
+<!-- ══ ADD / EDIT STAFF PANEL ═══════════════════════════ -->
+<div id="staffSlide" class="slide-overlay">
+  <div class="slide-panel">
+    <div class="slide-head"><h3 id="staffSlideTitle">Add New Staff Member</h3><button class="close-btn" onclick="closeSlide('staffSlide')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="slide-body">
+      <input type="hidden" id="editStaffIdx" value="-1" />
+      <div class="fg"><label>Full Name *</label><input class="fi" id="sf-name" placeholder="Dr. John Doe" /></div>
+      <div class="f-row"><div class="fg"><label>Role *</label><select class="fi" id="sf-role"><option>DOCTOR</option><option>NURSE</option><option>RECEPTIONIST</option><option>PHARMACIST</option><option>TECHNICIAN</option><option>ADMIN_STAFF</option></select></div><div class="fg"><label>Department *</label><input class="fi" id="sf-dept" placeholder="Cardiology" /></div></div>
+      <div class="f-row"><div class="fg"><label>Phone *</label><input class="fi" id="sf-phone" placeholder="555-0101" /></div><div class="fg"><label>Email *</label><input class="fi" id="sf-email" type="email" placeholder="doc@hms.com" /></div></div>
+      <div class="f-row"><div class="fg"><label>Joining Date</label><input class="fi" id="sf-date" type="date" /></div><div class="fg"><label>Salary (optional)</label><input class="fi" id="sf-salary" type="number" placeholder="75000" /></div></div>
+      <div class="fg"><label>Status</label><select class="fi" id="sf-status"><option>ACTIVE</option><option>ON_LEAVE</option><option>INACTIVE</option></select></div>
+    </div>
+    <div class="slide-foot"><button class="btn btn-outline" onclick="closeSlide('staffSlide')">Cancel</button><button class="btn btn-primary" onclick="saveStaff()">Save Staff</button></div>
+  </div>
+</div>
+
+<!-- ══ CONFIRM DELETE ════════════════════════════════════ -->
+<div id="confirmOverlay" class="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></div>
+    <h3>Delete Patient?</h3>
+    <p id="confirmMsg">This action cannot be undone. The patient record will be permanently removed.</p>
+    <div class="confirm-btns"><button class="btn btn-outline" onclick="closeConfirm()">Cancel</button><button class="btn btn-danger" id="confirmOkBtn">Delete</button></div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastCont"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════
+let patients = [
+  {id:'PAT-000001',firstName:'James',lastName:'Smith',age:45,gender:'MALE',disease:'Hypertension',doctor:'Dr. James Wilson',room:'101',status:'ADMITTED',blood:'A_POS',phone:'555-0101',ecName:'Jane Smith',ecPhone:'555-0199',address:'10 Oak St, Springfield',notes:'Patient shows good response to medication. Monitor BP daily.',admitted:'Jul 15, 2026',discharged:''},
+  {id:'PAT-000002',firstName:'Mary',lastName:'Johnson',age:32,gender:'FEMALE',disease:'Type 2 Diabetes',doctor:'Dr. Sarah Chen',room:'—',status:'DISCHARGED',blood:'B_POS',phone:'555-0102',ecName:'Robert Johnson',ecPhone:'555-0200',address:'22 Pine Ave, Riverside',notes:'Discharged with dietary guidelines. Follow-up in 2 weeks.',admitted:'Jul 02, 2026',discharged:'Jul 18, 2026'},
+  {id:'PAT-000003',firstName:'Robert',lastName:'Martinez',age:58,gender:'MALE',disease:'Cardiac Arrhythmia',doctor:'Dr. Priya Patel',room:'ICU-03',status:'CRITICAL',blood:'O_NEG',phone:'555-0103',ecName:'Maria Martinez',ecPhone:'555-0201',address:'5 Elm Blvd, Oakdale',notes:'Requires continuous cardiac monitoring. Family notified.',admitted:'Jul 19, 2026',discharged:''},
+  {id:'PAT-000004',firstName:'Patricia',lastName:'Brown',age:27,gender:'FEMALE',disease:'Acute Appendicitis',doctor:'Dr. Robert Martinez',room:'205',status:'ADMITTED',blood:'AB_POS',phone:'555-0104',ecName:'George Brown',ecPhone:'555-0202',address:'88 Maple Lane, Westfield',notes:'Post-surgery recovery. Pain managed with analgesics.',admitted:'Jul 20, 2026',discharged:''},
+  {id:'PAT-000005',firstName:'John',lastName:'Jones',age:62,gender:'MALE',disease:'Pneumonia',doctor:'Dr. James Wilson',room:'108',status:'ADMITTED',blood:'A_NEG',phone:'555-0105',ecName:'Susan Jones',ecPhone:'555-0203',address:'3 Birch Rd, Lakeside',notes:'IV antibiotics started. Oxygen saturation improving.',admitted:'Jul 18, 2026',discharged:''},
+  {id:'PAT-000006',firstName:'Jennifer',lastName:'Garcia',age:41,gender:'FEMALE',disease:'Fractured Femur',doctor:'Dr. Sarah Chen',room:'—',status:'DISCHARGED',blood:'B_NEG',phone:'555-0106',ecName:'Carlos Garcia',ecPhone:'555-0204',address:'41 Cedar Dr, Hilltown',notes:'Surgery successful. Physiotherapy recommended for 6 weeks.',admitted:'Jun 28, 2026',discharged:'Jul 20, 2026'},
+  {id:'PAT-000007',firstName:'Michael',lastName:'Miller',age:35,gender:'MALE',disease:'Migraine',doctor:'Dr. Priya Patel',room:'—',status:'PENDING',blood:'O_POS',phone:'555-0107',ecName:'Laura Miller',ecPhone:'555-0205',address:'17 Walnut St, Greenview',notes:'Awaiting MRI results. Prescribed pain relief.',admitted:'Jul 22, 2026',discharged:''},
+  {id:'PAT-000008',firstName:'Linda',lastName:'Davis',age:50,gender:'FEMALE',disease:'Kidney Stones',doctor:'Dr. James Wilson',room:'302',status:'ADMITTED',blood:'AB_NEG',phone:'555-0108',ecName:'Mark Davis',ecPhone:'555-0206',address:'9 Poplar Ave, Northgate',notes:'Lithotripsy scheduled for tomorrow. Hydration therapy ongoing.',admitted:'Jul 21, 2026',discharged:''},
+  {id:'PAT-000009',firstName:'William',lastName:'Wilson',age:73,gender:'MALE',disease:'Stroke',doctor:'Dr. Sarah Chen',room:'ICU-01',status:'CRITICAL',blood:'A_POS',phone:'555-0109',ecName:'Helen Wilson',ecPhone:'555-0207',address:'55 Ash Blvd, Eastside',notes:'Left-side paralysis. Neurologist on call. Family at bedside.',admitted:'Jul 17, 2026',discharged:''},
+  {id:'PAT-000010',firstName:'Barbara',lastName:'Taylor',age:29,gender:'FEMALE',disease:'Anemia',doctor:'Dr. Robert Martinez',room:'—',status:'DISCHARGED',blood:'O_POS',phone:'555-0110',ecName:'David Taylor',ecPhone:'555-0208',address:'66 Oak Lane, Westside',notes:'Iron supplements prescribed. Diet plan provided.',admitted:'Jul 10, 2026',discharged:'Jul 22, 2026'},
+  {id:'PAT-000011',firstName:'Charles',lastName:'Anderson',age:48,gender:'MALE',disease:'Asthma',doctor:'Dr. Priya Patel',room:'204',status:'ADMITTED',blood:'B_POS',phone:'555-0111',ecName:'Nancy Anderson',ecPhone:'555-0209',address:'77 Spruce Way, Midtown',notes:'Nebulizer treatment 4x/day. Peak flow improving.',admitted:'Jul 20, 2026',discharged:''},
+  {id:'PAT-000012',firstName:'Susan',lastName:'Thomas',age:55,gender:'FEMALE',disease:'Osteoporosis',doctor:'Dr. James Wilson',room:'—',status:'DISCHARGED',blood:'A_NEG',phone:'555-0112',ecName:'Larry Thomas',ecPhone:'555-0210',address:'12 Fir St, Southpark',notes:'Calcium and Vitamin D supplements. Annual DEXA scan recommended.',admitted:'Jul 05, 2026',discharged:'Jul 15, 2026'},
+  {id:'PAT-000013',firstName:'Joseph',lastName:'Jackson',age:67,gender:'MALE',disease:'Parkinson\'s Disease',doctor:'Dr. Sarah Chen',room:'310',status:'ADMITTED',blood:'O_NEG',phone:'555-0113',ecName:'Dorothy Jackson',ecPhone:'555-0211',address:'34 Larch Ave, Uptown',notes:'DBS therapy evaluation in progress. Tremors partially controlled.',admitted:'Jul 12, 2026',discharged:''},
+  {id:'PAT-000014',firstName:'Karen',lastName:'White',age:38,gender:'FEMALE',disease:'Gallstones',doctor:'Dr. Robert Martinez',room:'—',status:'DISCHARGED',blood:'B_NEG',phone:'555-0114',ecName:'Kevin White',ecPhone:'555-0212',address:'89 Hemlock Rd, Eastgate',notes:'Laparoscopic cholecystectomy successful. Low-fat diet advised.',admitted:'Jul 08, 2026',discharged:'Jul 16, 2026'},
+  {id:'PAT-000015',firstName:'Thomas',lastName:'Harris',age:81,gender:'MALE',disease:'Heart Failure',doctor:'Dr. Priya Patel',room:'ICU-02',status:'CRITICAL',blood:'A_POS',phone:'555-0115',ecName:'Sandra Harris',ecPhone:'555-0213',address:'2 Juniper Lane, Northside',notes:'Ejection fraction 25%. Cardiology team managing. DNR discussed.',admitted:'Jul 16, 2026',discharged:''},
+  {id:'PAT-000016',firstName:'Emily',lastName:'Clark',age:24,gender:'FEMALE',disease:'Appendectomy',doctor:'Dr. James Wilson',room:'106',status:'ADMITTED',blood:'AB_POS',phone:'555-0116',ecName:'Paul Clark',ecPhone:'555-0214',address:'56 Cypress Blvd, Westpark',notes:'Post-op day 1. Tolerating liquids well. Discharge expected tomorrow.',admitted:'Jul 21, 2026',discharged:''},
+  {id:'PAT-000017',firstName:'Daniel',lastName:'Lewis',age:44,gender:'MALE',disease:'Ulcerative Colitis',doctor:'Dr. Sarah Chen',room:'208',status:'ADMITTED',blood:'O_POS',phone:'555-0117',ecName:'Jessica Lewis',ecPhone:'555-0215',address:'13 Magnolia Dr, Riverside',notes:'Steroid therapy initiated. GI consult scheduled.',admitted:'Jul 19, 2026',discharged:''},
+  {id:'PAT-000018',firstName:'Ashley',lastName:'Robinson',age:31,gender:'FEMALE',disease:'Asthma Attack',doctor:'Dr. Priya Patel',room:'—',status:'DISCHARGED',blood:'B_POS',phone:'555-0118',ecName:'Brian Robinson',ecPhone:'555-0216',address:'67 Rosewood Ave, Parkview',notes:'Stabilized with bronchodilators. Inhaler technique re-educated.',admitted:'Jul 14, 2026',discharged:'Jul 17, 2026'},
+  {id:'PAT-000019',firstName:'James',lastName:'Walker',age:52,gender:'MALE',disease:'Prostate Cancer',doctor:'Dr. Robert Martinez',room:'401',status:'ADMITTED',blood:'A_NEG',phone:'555-0119',ecName:'Ruth Walker',ecPhone:'555-0217',address:'29 Sycamore St, Hillside',notes:'Radiation therapy week 3. Fatigue managed with rest protocol.',admitted:'Jul 01, 2026',discharged:''},
+  {id:'PAT-000020',firstName:'Stephanie',lastName:'Hall',age:36,gender:'FEMALE',disease:'Preeclampsia',doctor:'Dr. Sarah Chen',room:'Maternity-2',status:'ADMITTED',blood:'O_NEG',phone:'555-0120',ecName:'Mark Hall',ecPhone:'555-0218',address:'48 Willow Way, Eastdale',notes:'BP monitored every 2 hours. Corticosteroids for fetal lung maturity.',admitted:'Jul 22, 2026',discharged:''},
+  {id:'PAT-000021',firstName:'Christopher',lastName:'Young',age:60,gender:'MALE',disease:'COPD Exacerbation',doctor:'Dr. James Wilson',room:'201',status:'ADMITTED',blood:'B_NEG',phone:'555-0121',ecName:'Patricia Young',ecPhone:'555-0219',address:'92 Chestnut Lane, Uptown',notes:'Oxygen therapy 4L/min. Antibiotics and steroids initiated.',admitted:'Jul 20, 2026',discharged:''},
+  {id:'PAT-000022',firstName:'Laura',lastName:'King',age:28,gender:'FEMALE',disease:'Urinary Tract Infection',doctor:'Dr. Priya Patel',room:'—',status:'DISCHARGED',blood:'A_POS',phone:'555-0122',ecName:'Michael King',ecPhone:'555-0220',address:'7 Peach Blvd, Southside',notes:'Antibiotic course completed. Symptoms resolved.',admitted:'Jul 13, 2026',discharged:'Jul 18, 2026'},
+  {id:'PAT-000023',firstName:'Matthew',lastName:'Scott',age:77,gender:'MALE',disease:'Alzheimer\'s Disease',doctor:'Dr. Sarah Chen',room:'320',status:'ADMITTED',blood:'O_POS',phone:'555-0123',ecName:'Anna Scott',ecPhone:'555-0221',address:'61 Plum Ave, Greenfield',notes:'Memory care protocol. Family counselled on long-term care options.',admitted:'Jun 20, 2026',discharged:''},
+  {id:'PAT-000024',firstName:'Amanda',lastName:'Green',age:43,gender:'FEMALE',disease:'Lupus Flare',doctor:'Dr. Robert Martinez',room:'305',status:'ADMITTED',blood:'AB_NEG',phone:'555-0124',ecName:'Steven Green',ecPhone:'555-0222',address:'38 Hawthorn Dr, Westdale',notes:'High-dose steroids initiated. Rheumatology review tomorrow.',admitted:'Jul 21, 2026',discharged:''},
+  {id:'PAT-000025',firstName:'David',lastName:'Baker',age:55,gender:'MALE',disease:'Type 1 Diabetes',doctor:'Dr. James Wilson',room:'—',status:'PENDING',blood:'B_POS',phone:'555-0125',ecName:'Carol Baker',ecPhone:'555-0223',address:'14 Almond St, Lakewood',notes:'Insulin pump review. Endocrinology consult pending.',admitted:'Jul 22, 2026',discharged:''},
+];
+
+let staffData = [
+  {id:'EMP-000001',name:'Dr. James Wilson',role:'DOCTOR',dept:'Cardiology',phone:'555-0101',email:'jwilson@hms.com',status:'ACTIVE',joined:'Jan 15, 2020',salary:'$95,000'},
+  {id:'EMP-000002',name:'Dr. Sarah Chen',role:'DOCTOR',dept:'Neurology',phone:'555-0102',email:'schen@hms.com',status:'ACTIVE',joined:'Mar 01, 2019',salary:'$98,000'},
+  {id:'EMP-000003',name:'Dr. Robert Martinez',role:'DOCTOR',dept:'Orthopedics',phone:'555-0103',email:'rmartinez@hms.com',status:'ACTIVE',joined:'Jun 10, 2018',salary:'$102,000'},
+  {id:'EMP-000004',name:'Nurse Emily Davis',role:'NURSE',dept:'ICU',phone:'555-0104',email:'edavis@hms.com',status:'ACTIVE',joined:'Aug 20, 2021',salary:'$58,000'},
+  {id:'EMP-000005',name:'Nurse Michael Brown',role:'NURSE',dept:'General Ward',phone:'555-0105',email:'mbrown@hms.com',status:'ACTIVE',joined:'Feb 14, 2022',salary:'$55,000'},
+  {id:'EMP-000006',name:'Nurse Jessica Taylor',role:'NURSE',dept:'Pediatrics',phone:'555-0106',email:'jtaylor@hms.com',status:'ON_LEAVE',joined:'Nov 05, 2020',salary:'$57,000'},
+  {id:'EMP-000007',name:'Alice Johnson',role:'RECEPTIONIST',dept:'Front Desk',phone:'555-0107',email:'ajohnson@hms.com',status:'ACTIVE',joined:'Apr 22, 2023',salary:'$38,000'},
+  {id:'EMP-000008',name:'Thomas Anderson',role:'PHARMACIST',dept:'Pharmacy',phone:'555-0108',email:'tanderson@hms.com',status:'ACTIVE',joined:'Sep 01, 2021',salary:'$72,000'},
+  {id:'EMP-000009',name:'Dr. Priya Patel',role:'DOCTOR',dept:'Emergency',phone:'555-0109',email:'ppatel@hms.com',status:'ACTIVE',joined:'Jul 15, 2017',salary:'$110,000'},
+  {id:'EMP-000010',name:'Nurse Daniel Kim',role:'NURSE',dept:'Emergency',phone:'555-0110',email:'dkim@hms.com',status:'ACTIVE',joined:'Jan 08, 2023',salary:'$56,000'},
+];
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+const colors = ['#2563eb','#7c3aed','#db2777','#059669','#d97706','#dc2626','#0891b2','#84cc16','#f97316','#6366f1'];
+const gc = n => colors[(n.charCodeAt(0)+n.charCodeAt(n.length-1))%colors.length];
+const ini = (f,l) => ((f||'')[0]+(l||'')[0]).toUpperCase();
+const sbadge = s => `<span class="badge badge-${(s||'').toLowerCase()}">${s}</span>`;
+const rbadge = r => `<span class="badge badge-${(r||'').toLowerCase()}">${r}</span>`;
+
+// Pagination state
+const PAGE_SIZE = 10;
+let patPage = 1, patFiltered = [...patients];
+let staffPage = 1, staffFiltered = [...staffData];
+
+// ═══════════════════════════════════════════════════════
+//  RENDER PATIENTS TABLE + PAGINATION
+// ═══════════════════════════════════════════════════════
+function renderPatients() {
+  const total = patFiltered.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (patPage > totalPages) patPage = totalPages;
+  const slice = patFiltered.slice((patPage-1)*PAGE_SIZE, patPage*PAGE_SIZE);
+
+  const tb = document.getElementById('patientTbody');
+  if (!slice.length) {
+    tb.innerHTML = `<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--text-muted)">No patients found. Try adjusting your search.</td></tr>`;
+  } else {
+    tb.innerHTML = slice.map((p, i) => {
+      const realIdx = patients.indexOf(p);
+      return `<tr>
+        <td><span class="mono">${p.id}</span></td>
+        <td><div class="p-cell"><div class="p-av" style="background:${gc(p.firstName)}">${ini(p.firstName,p.lastName)}</div><div class="p-name">${p.firstName} ${p.lastName}</div></div></td>
+        <td>${p.age}y · ${p.gender.charAt(0)+p.gender.slice(1).toLowerCase()}</td>
+        <td>${p.disease}</td>
+        <td>${p.doctor}</td>
+        <td>${p.room||'—'}</td>
+        <td>${sbadge(p.status)}</td>
+        <td style="text-align:right"><div class="action-btns">
+          <button class="act v" title="View Details" onclick="viewPatient(${realIdx})"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
+          <button class="act e" title="Edit Patient" onclick="editPatient(${realIdx})"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
+          <button class="act d" title="Delete Patient" onclick="confirmDelete(${realIdx})"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+
+  document.getElementById('patientCount').textContent = slice.length;
+  document.getElementById('patientTotal').textContent = total;
+  document.getElementById('patPageInfo').textContent = `Page ${patPage} of ${totalPages}`;
+  renderPatPagination(totalPages);
+  updateDashStats();
+}
+
+function renderPatPagination(totalPages) {
+  const c = document.getElementById('patPageBtns');
+  c.innerHTML = '';
+  const addBtn = (label, page, isActive, disabled) => {
+    const b = document.createElement('button');
+    b.className = 'pg' + (isActive ? ' active' : '');
+    b.textContent = label;
+    b.disabled = disabled;
+    if (!disabled) b.onclick = () => { patPage = page; renderPatients(); };
+    c.appendChild(b);
+  };
+  addBtn('← Prev', patPage-1, false, patPage===1);
+  for (let p = 1; p <= totalPages; p++) addBtn(p, p, p===patPage, false);
+  addBtn('Next →', patPage+1, false, patPage===totalPages);
+}
+
+// ═══════════════════════════════════════════════════════
+//  SEARCH & FILTER PATIENTS
+// ═══════════════════════════════════════════════════════
+let patSearchQ = '', patStatusQ = '';
+function patientSearch(q) { patSearchQ = q.toLowerCase(); patPage = 1; applyPatFilters(); }
+function patientStatusFilter(s) { patStatusQ = s; patPage = 1; applyPatFilters(); }
+function applyPatFilters() {
+  patFiltered = patients.filter(p => {
+    const matchSearch = !patSearchQ || `${p.firstName} ${p.lastName} ${p.id} ${p.disease}`.toLowerCase().includes(patSearchQ);
+    const matchStatus = !patStatusQ || p.status === patStatusQ;
+    return matchSearch && matchStatus;
+  });
+  renderPatients();
+}
+
+// ═══════════════════════════════════════════════════════
+//  VIEW PATIENT DETAILS
+// ═══════════════════════════════════════════════════════
+function viewPatient(idx) {
+  const p = patients[idx];
+  const body = document.getElementById('viewPatientBody');
+  const foot = document.getElementById('viewPatientFoot');
+  body.innerHTML = `
+    <div class="detail-hero">
+      <div class="detail-av" style="background:${gc(p.firstName)}">${ini(p.firstName,p.lastName)}</div>
+      <div>
+        <div class="detail-name">${p.firstName} ${p.lastName}</div>
+        <div class="detail-badges">${sbadge(p.status)}<span class="badge" style="background:var(--bg);color:var(--text-muted)">${p.id}</span></div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${p.age} years · ${p.gender} · ${p.blood||'—'}</div>
+      </div>
+    </div>
+    <div class="info-section">
+      <div class="info-section-title">🏥 Medical Information</div>
+      <div class="info-grid">
+        <div class="info-field"><label>Disease / Condition</label><p>${p.disease}</p></div>
+        <div class="info-field"><label>Assigned Doctor</label><p>${p.doctor}</p></div>
+        <div class="info-field"><label>Room Number</label><p>${p.room||'—'}</p></div>
+        <div class="info-field"><label>Admission Date</label><p>${p.admitted||'—'}</p></div>
+        <div class="info-field"><label>Discharge Date</label><p>${p.discharged||'Not yet discharged'}</p></div>
+        <div class="info-field"><label>Blood Group</label><p>${p.blood||'—'}</p></div>
+      </div>
+    </div>
+    <div class="info-section">
+      <div class="info-section-title">👤 Personal Information</div>
+      <div class="info-grid">
+        <div class="info-field"><label>Phone</label><p>${p.phone||'—'}</p></div>
+        <div class="info-field"><label>Address</label><p>${p.address||'—'}</p></div>
+        <div class="info-field"><label>Emergency Contact</label><p>${p.ecName||'—'}</p></div>
+        <div class="info-field"><label>Emergency Phone</label><p>${p.ecPhone||'—'}</p></div>
+      </div>
+    </div>
+    ${p.notes ? `<div class="info-section"><div class="info-section-title">📋 Medical Notes</div><div class="notes-box">${p.notes}</div></div>` : ''}
+  `;
+  foot.innerHTML = `
+    <button class="btn btn-outline" onclick="closeOverlay('viewPatientOverlay')">Close</button>
+    <button class="btn btn-outline" style="border-color:#d97706;color:#d97706" onclick="closeOverlay('viewPatientOverlay');editPatient(${idx})">✏️ Edit</button>
+    ${p.status==='ADMITTED'||p.status==='CRITICAL' ? `<button class="btn btn-success" onclick="closeOverlay('viewPatientOverlay');quickDischarge(${idx})">Discharge</button>` : ''}
+    ${p.status==='PENDING'||p.status==='DISCHARGED' ? `<button class="btn btn-primary" onclick="closeOverlay('viewPatientOverlay');quickAdmit(${idx})">Admit</button>` : ''}
+    <button class="btn btn-danger" onclick="closeOverlay('viewPatientOverlay');confirmDelete(${idx})">🗑 Delete</button>
+  `;
+  document.getElementById('viewPatientOverlay').classList.add('open');
+}
+function quickDischarge(idx) { patients[idx].status='DISCHARGED'; patients[idx].discharged='Jul 28, 2026'; applyPatFilters(); renderAdmissions(); toast(`${patients[idx].firstName} ${patients[idx].lastName} discharged`,'success'); }
+function quickAdmit(idx) { patients[idx].status='ADMITTED'; patients[idx].discharged=''; applyPatFilters(); renderAdmissions(); toast(`${patients[idx].firstName} ${patients[idx].lastName} admitted`,'success'); }
+
+// ═══════════════════════════════════════════════════════
+//  ADD / EDIT PATIENT
+// ═══════════════════════════════════════════════════════
+function openAddPatient() {
+  document.getElementById('patSlideTitle').textContent = 'Add New Patient';
+  document.getElementById('editPatIdx').value = '-1';
+  ['firstName','lastName','age','phone','disease','doctor','room','ecName','ecPhone','address','notes'].forEach(f => { const el = document.getElementById('pf-'+f); if(el) el.value = ''; });
+  document.getElementById('pf-gender').value = 'MALE';
+  document.getElementById('pf-blood').value = 'A_POS';
+  document.getElementById('pf-status').value = 'ADMITTED';
+  document.getElementById('patientSlide').classList.add('open');
+}
+function editPatient(idx) {
+  const p = patients[idx];
+  document.getElementById('patSlideTitle').textContent = 'Edit Patient — ' + p.firstName + ' ' + p.lastName;
+  document.getElementById('editPatIdx').value = idx;
+  document.getElementById('pf-firstName').value = p.firstName;
+  document.getElementById('pf-lastName').value = p.lastName;
+  document.getElementById('pf-age').value = p.age;
+  document.getElementById('pf-phone').value = p.phone;
+  document.getElementById('pf-disease').value = p.disease;
+  document.getElementById('pf-doctor').value = p.doctor;
+  document.getElementById('pf-room').value = p.room === '—' ? '' : p.room;
+  document.getElementById('pf-gender').value = p.gender;
+  document.getElementById('pf-blood').value = p.blood || 'A_POS';
+  document.getElementById('pf-status').value = p.status;
+  document.getElementById('pf-ecName').value = p.ecName || '';
+  document.getElementById('pf-ecPhone').value = p.ecPhone || '';
+  document.getElementById('pf-address').value = p.address || '';
+  document.getElementById('pf-notes').value = p.notes || '';
+  document.getElementById('patientSlide').classList.add('open');
+}
+function savePatient() {
+  const fn = document.getElementById('pf-firstName').value.trim();
+  const ln = document.getElementById('pf-lastName').value.trim();
+  const age = document.getElementById('pf-age').value;
+  const disease = document.getElementById('pf-disease').value.trim();
+  const doctor = document.getElementById('pf-doctor').value.trim();
+  if (!fn || !ln || !age || !disease || !doctor) { toast('Please fill all required fields (*)','error'); return; }
+  const idx = parseInt(document.getElementById('editPatIdx').value);
+  const room = document.getElementById('pf-room').value.trim() || '—';
+  const data = {
+    firstName:fn, lastName:ln, age:parseInt(age),
+    gender:document.getElementById('pf-gender').value,
+    phone:document.getElementById('pf-phone').value,
+    blood:document.getElementById('pf-blood').value,
+    disease, doctor, room,
+    status:document.getElementById('pf-status').value,
+    ecName:document.getElementById('pf-ecName').value,
+    ecPhone:document.getElementById('pf-ecPhone').value,
+    address:document.getElementById('pf-address').value,
+    notes:document.getElementById('pf-notes').value,
+    admitted:'Jul 28, 2026', discharged:'',
+  };
+  if (idx === -1) {
+    const newId = 'PAT-' + String(patients.length+1).padStart(6,'0');
+    patients.unshift({id:newId, ...data});  // add to FRONT so it's on page 1
+    toast(`Patient ${fn} ${ln} added successfully! Showing on page 1.`, 'success');
+    // Clear any active filters so new patient is always visible
+    patSearchQ = '';
+    patStatusQ = '';
+    const si = document.getElementById('patSearchInput'); if(si) si.value='';
+    const sf = document.getElementById('patStatusFilter'); if(sf) sf.value='';
+    const hs = document.getElementById('headerSearch'); if(hs) hs.value='';
+  } else {
+    patients[idx] = {...patients[idx], ...data};
+    toast(`Patient ${fn} ${ln} updated successfully!`, 'success');
+  }
+  closeSlide('patientSlide');
+  patFiltered = [...patients]; patPage = 1; applyPatFilters();
+  // Also refresh admissions if applicable
+  if (document.getElementById('view-admissions').classList.contains('active')) renderAdmissions();
+  updateDashStats();
+  renderRecentActivity();
+  addNotification('🏥', `Patient <strong>${fn} ${ln}</strong> ${idx===-1?'added':'updated'}.`);
+}
+
+// ═══════════════════════════════════════════════════════
+//  DELETE PATIENT
+// ═══════════════════════════════════════════════════════
+let pendingDeleteIdx = -1;
+function confirmDelete(idx) {
+  pendingDeleteIdx = idx;
+  const p = patients[idx];
+  document.getElementById('confirmMsg').textContent = `Are you sure you want to permanently delete ${p.firstName} ${p.lastName} (${p.id})? This cannot be undone.`;
+  document.getElementById('confirmOkBtn').onclick = () => doDelete();
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function doDelete() {
+  if (pendingDeleteIdx < 0) return;
+  const p = patients[pendingDeleteIdx];
+  const name = `${p.firstName} ${p.lastName}`;
+  patients.splice(pendingDeleteIdx, 1);
+  pendingDeleteIdx = -1;
+  closeConfirm();
+  patFiltered = [...patients]; applyPatFilters();
+  toast(`${name} has been deleted.`, 'success');
+}
+function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('open'); }
+
+// ═══════════════════════════════════════════════════════
+//  RENDER STAFF TABLE + PAGINATION
+// ═══════════════════════════════════════════════════════
+function renderStaff() {
+  const total = staffFiltered.length;
+  const totalPages = Math.max(1, Math.ceil(total/PAGE_SIZE));
+  if (staffPage > totalPages) staffPage = totalPages;
+  const slice = staffFiltered.slice((staffPage-1)*PAGE_SIZE, staffPage*PAGE_SIZE);
+  const tb = document.getElementById('staffTbody');
+  tb.innerHTML = slice.map((s) => {
+    const realIdx = staffData.indexOf(s);
+    return `<tr>
+      <td><span class="mono">${s.id}</span></td>
+      <td><div class="p-cell"><div class="p-av" style="background:${gc(s.name)}">${ini(s.name.split(' ')[0], s.name.split(' ')[s.name.split(' ').length-1])}</div><div class="p-name">${s.name}</div></div></td>
+      <td>${rbadge(s.role)}</td>
+      <td>${s.dept}</td>
+      <td>${s.phone}</td>
+      <td style="font-size:11.5px">${s.email}</td>
+      <td>${sbadge(s.status)}</td>
+      <td style="text-align:right"><div class="action-btns">
+        <button class="act v" title="View" onclick="viewStaff(${realIdx})"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
+        <button class="act e" title="Edit" onclick="editStaff(${realIdx})"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
+        <button class="act d" title="Delete" onclick="confirmDeleteStaff(${realIdx})"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('staffCount').textContent = total;
+  document.getElementById('staffPageInfo').textContent = `Page ${staffPage} of ${totalPages}`;
+  renderStaffPagination(totalPages);
+}
+function renderStaffPagination(totalPages) {
+  const c = document.getElementById('staffPageBtns');
+  c.innerHTML = '';
+  const addBtn = (label, page, isActive, disabled) => {
+    const b = document.createElement('button');
+    b.className = 'pg' + (isActive ? ' active' : '');
+    b.textContent = label; b.disabled = disabled;
+    if (!disabled) b.onclick = () => { staffPage = page; renderStaff(); };
+    c.appendChild(b);
+  };
+  addBtn('← Prev', staffPage-1, false, staffPage===1);
+  for (let p = 1; p <= totalPages; p++) addBtn(p, p, p===staffPage, false);
+  addBtn('Next →', staffPage+1, false, staffPage===totalPages);
+}
+function staffSearch(q) {
+  staffFiltered = q ? staffData.filter(s => s.name.toLowerCase().includes(q.toLowerCase()) || s.email.toLowerCase().includes(q.toLowerCase()) || s.dept.toLowerCase().includes(q.toLowerCase())) : [...staffData];
+  staffPage = 1; renderStaff();
+}
+function viewStaff(idx) {
+  const s = staffData[idx];
+  toast(`Viewing ${s.name} — ${s.role} in ${s.dept}`, 'info');
+}
+function editStaff(idx) {
+  const s = staffData[idx];
+  document.getElementById('staffSlideTitle').textContent = 'Edit Staff — ' + s.name;
+  document.getElementById('editStaffIdx').value = idx;
+  document.getElementById('sf-name').value = s.name;
+  document.getElementById('sf-role').value = s.role;
+  document.getElementById('sf-dept').value = s.dept;
+  document.getElementById('sf-phone').value = s.phone;
+  document.getElementById('sf-email').value = s.email;
+  document.getElementById('sf-status').value = s.status;
+  document.getElementById('staffSlide').classList.add('open');
+}
+function openAddStaff() {
+  document.getElementById('staffSlideTitle').textContent = 'Add New Staff Member';
+  document.getElementById('editStaffIdx').value = '-1';
+  ['name','dept','phone','email'].forEach(f => document.getElementById('sf-'+f).value = '');
+  document.getElementById('sf-role').value = 'DOCTOR';
+  document.getElementById('sf-status').value = 'ACTIVE';
+  document.getElementById('staffSlide').classList.add('open');
+}
+function saveStaff() {
+  const name = document.getElementById('sf-name').value.trim();
+  const dept = document.getElementById('sf-dept').value.trim();
+  const phone = document.getElementById('sf-phone').value.trim();
+  const email = document.getElementById('sf-email').value.trim();
+  if (!name || !dept) { toast('Name and Department are required','error'); return; }
+  const idx = parseInt(document.getElementById('editStaffIdx').value);
+  const data = { name, role: document.getElementById('sf-role').value, dept, phone, email, status: document.getElementById('sf-status').value, joined: 'Jul 28, 2026', salary: '—' };
+  if (idx === -1) {
+    const newId = 'EMP-' + String(staffData.length+1).padStart(6,'0');
+    staffData.unshift({id:newId, ...data});  // add to FRONT so it appears on page 1
+    toast(`${name} added to staff!`, 'success');
+    // Clear any staff search so new member is visible
+    staffFiltered = [...staffData]; staffPage = 1;
+    const si = document.querySelector('#view-staff .t-search input'); if(si) si.value='';
+    const hs = document.getElementById('headerSearch'); if(hs) hs.value='';
+  } else {
+    staffData[idx] = {...staffData[idx], ...data};
+    staffFiltered = [...staffData];
+    toast(`${name} updated!`, 'success');
+  }
+  closeSlide('staffSlide');
+  renderStaff();
+  addNotification('👤', `Staff member <strong>${name}</strong> ${idx===-1?'added':'updated'}.`);
+}
+function confirmDeleteStaff(idx) {
+  const s = staffData[idx];
+  document.getElementById('confirmMsg').textContent = `Delete ${s.name} (${s.id})? This cannot be undone.`;
+  document.getElementById('confirmOkBtn').onclick = () => { staffData.splice(idx,1); staffFiltered=[...staffData]; renderStaff(); closeConfirm(); toast(`${s.name} removed from staff.`,'success'); };
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+
+// ═══════════════════════════════════════════════════════
+//  ADMISSIONS & DISCHARGE PAGES
+// ═══════════════════════════════════════════════════════
+function renderAdmissions() {
+  const list = patients.filter(p => p.status==='ADMITTED'||p.status==='CRITICAL');
+  document.getElementById('admCount').textContent = list.length;
+  document.getElementById('admTbody').innerHTML = list.map((p,i) => {
+    const idx = patients.indexOf(p);
+    return `<tr>
+      <td><span class="mono">${p.id}</span></td>
+      <td><div class="p-cell"><div class="p-av" style="background:${gc(p.firstName)}">${ini(p.firstName,p.lastName)}</div><span class="p-name">${p.firstName} ${p.lastName}</span></div></td>
+      <td>${p.disease}</td><td>${p.doctor}</td><td>${p.room||'—'}</td><td>${p.admitted}</td><td>${sbadge(p.status)}</td>
+      <td style="text-align:right"><button class="btn btn-success" style="font-size:11px;padding:5px 11px" onclick="quickDischarge(${idx})">Discharge</button></td>
+    </tr>`;
+  }).join('');
+}
+function calcDays(admitted, discharged) {
+  // Parse date strings like "Jul 02, 2026" or "Jun 28, 2026"
+  if (!admitted || !discharged) return '—';
+  const a = new Date(admitted);
+  const d = new Date(discharged);
+  if (isNaN(a) || isNaN(d)) return '—';
+  const diff = Math.round((d - a) / (1000 * 60 * 60 * 24));
+  return diff >= 0 ? diff + (diff === 1 ? ' day' : ' days') : '—';
+}
+function renderDischarges() {
+  const list = patients.filter(p => p.status==='DISCHARGED');
+  document.getElementById('disCount').textContent = list.length;
+  document.getElementById('disTbody').innerHTML = list.map(p => {
+    const days = calcDays(p.admitted, p.discharged);
+    return `<tr>
+      <td><span class="mono">${p.id}</span></td>
+      <td><div class="p-cell"><div class="p-av" style="background:${gc(p.firstName)}">${ini(p.firstName,p.lastName)}</div><span class="p-name">${p.firstName} ${p.lastName}</span></div></td>
+      <td>${p.disease}</td><td>${p.doctor}</td><td>${p.room||'—'}</td>
+      <td>${p.admitted}</td><td>${p.discharged||'—'}</td>
+      <td><span style="font-weight:700;color:var(--primary)">${days}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  REPORTS
+// ═══════════════════════════════════════════════════════
+function renderReports() {
+  const adm = patients.filter(p=>p.status==='ADMITTED'||p.status==='CRITICAL').length;
+  const dis = patients.filter(p=>p.status==='DISCHARGED').length;
+  const crit = patients.filter(p=>p.status==='CRITICAL').length;
+  ['rpt-total','rpt-adm','rpt-dis','rpt-crit','rpt-adm2','rpt-crit2','rpt-dis2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (id==='rpt-total') el.textContent=patients.length;
+    else if (id==='rpt-adm'||id==='rpt-adm2') el.textContent=adm;
+    else if (id==='rpt-dis'||id==='rpt-dis2') el.textContent=dis;
+    else if (id==='rpt-crit'||id==='rpt-crit2') el.textContent=crit;
+  });
+  document.getElementById('rptPatTbody').innerHTML = patients.slice(0,8).map(p=>`<tr><td><span class="mono">${p.id}</span></td><td>${p.firstName} ${p.lastName}</td><td>${p.disease}</td><td>${p.doctor}</td><td>${sbadge(p.status)}</td><td>${p.admitted}</td></tr>`).join('');
+  document.getElementById('rptStaffTbody').innerHTML = staffData.map(s=>`<tr><td><span class="mono">${s.id}</span></td><td>${s.name}</td><td>${rbadge(s.role)}</td><td>${s.dept}</td><td>${sbadge(s.status)}</td></tr>`).join('');
+  const admList = patients.filter(p=>p.status==='ADMITTED'||p.status==='CRITICAL');
+  document.getElementById('rptAdmTbody').innerHTML = admList.slice(0,8).map(p=>`<tr><td><span class="mono">${p.id}</span></td><td>${p.firstName} ${p.lastName}</td><td>${p.disease}</td><td>${p.doctor}</td><td>${p.room||'—'}</td><td>${p.admitted}</td></tr>`).join('');
+  const disList = patients.filter(p=>p.status==='DISCHARGED');
+  document.getElementById('rptDisTbody').innerHTML = disList.slice(0,8).map(p=>`<tr><td><span class="mono">${p.id}</span></td><td>${p.firstName} ${p.lastName}</td><td>${p.disease}</td><td>${p.doctor}</td><td>${p.admitted}</td><td>${p.discharged||'—'}</td></tr>`).join('');
+}
+function switchRptTab(btn, tabId) {
+  btn.closest('.view').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  ['rpt-patients','rpt-staff','rpt-admissions','rpt-discharges'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.style.display = id===tabId?'block':'none';
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  DASHBOARD STATS
+// ═══════════════════════════════════════════════════════
+function updateDashStats() {
+  const adm = patients.filter(p=>p.status==='ADMITTED'||p.status==='CRITICAL').length;
+  const dis = patients.filter(p=>p.status==='DISCHARGED').length;
+  const crit = patients.filter(p=>p.status==='CRITICAL').length;
+  const dsTotal = document.getElementById('ds-total'); if(dsTotal) dsTotal.textContent = patients.length;
+  const dsAdm = document.getElementById('ds-admitted'); if(dsAdm) dsAdm.textContent = adm;
+  const dsDis = document.getElementById('ds-discharged'); if(dsDis) dsDis.textContent = dis;
+  const dsCrit = document.getElementById('ds-critical'); if(dsCrit) dsCrit.textContent = crit;
+}
+
+// ═══════════════════════════════════════════════════════
+//  RECENT ACTIVITY  — built from real data
+// ═══════════════════════════════════════════════════════
+function renderRecentActivity() {
+  const container = document.getElementById('recentActivityList');
+  if (!container) return;
+
+  // Build activity log from real patients + staff data
+  const activities = [];
+
+  // Critical patients → top priority alerts
+  patients.filter(p => p.status === 'CRITICAL').forEach(p => {
+    activities.push({
+      user: 'System', userRole: 'SYSTEM', initial: '⚠',
+      dotBg: '#fee2e2', dotColor: '#dc2626',
+      text: `<strong>ALERT:</strong> <strong>${p.firstName} ${p.lastName}</strong> (${p.id}) is in <strong>CRITICAL</strong> condition — Room ${p.room}, ${p.disease}`,
+      time: `Admitted ${p.admitted}`,
+      priority: 0
+    });
+  });
+
+  // Recently discharged patients
+  patients.filter(p => p.status === 'DISCHARGED' && p.discharged).forEach(p => {
+    activities.push({
+      user: 'admin', userRole: 'ADMIN', initial: 'A',
+      dotBg: '#dcfce7', dotColor: '#166534',
+      text: `<strong>admin</strong> discharged <strong>${p.firstName} ${p.lastName}</strong> (${p.id}) — ${p.disease}`,
+      time: `Discharged ${p.discharged} · ${calcDays(p.admitted, p.discharged)} stay`,
+      priority: 1
+    });
+  });
+
+  // Currently admitted patients (non-critical) — most recently admitted first
+  patients
+    .filter(p => p.status === 'ADMITTED')
+    .slice(0, 4)
+    .forEach(p => {
+      activities.push({
+        user: 'admin', userRole: 'ADMIN', initial: 'A',
+        dotBg: '#dbeafe', dotColor: '#1d4ed8',
+        text: `<strong>admin</strong> admitted <strong>${p.firstName} ${p.lastName}</strong> (${p.id}) — ${p.disease}, Room ${p.room}`,
+        time: `Admitted ${p.admitted}`,
+        priority: 2
+      });
+    });
+
+  // Staff on leave
+  staffData.filter(s => s.status === 'ON_LEAVE').forEach(s => {
+    activities.push({
+      user: 'System', userRole: 'SYSTEM', initial: '👤',
+      dotBg: '#fef3c7', dotColor: '#d97706',
+      text: `<strong>${s.name}</strong> (${s.id}) is on <strong>leave</strong> — ${s.dept} dept needs coverage`,
+      time: `Since joining ${s.joined}`,
+      priority: 3
+    });
+  });
+
+  // Pending patients
+  patients.filter(p => p.status === 'PENDING').forEach(p => {
+    activities.push({
+      user: 'admin', userRole: 'ADMIN', initial: 'A',
+      dotBg: '#fef3c7', dotColor: '#d97706',
+      text: `<strong>admin</strong> created pending record for <strong>${p.firstName} ${p.lastName}</strong> (${p.id}) — awaiting ${p.disease} workup`,
+      time: `Recorded ${p.admitted}`,
+      priority: 4
+    });
+  });
+
+  // Sort: critical first, then rest
+  activities.sort((a, b) => a.priority - b.priority);
+
+  // Render top 6 items
+  container.innerHTML = activities.slice(0, 6).map(a => `
+    <div class="act-item">
+      <div class="act-dot" style="background:${a.dotBg};color:${a.dotColor};font-size:${a.initial.length > 1 ? '14px' : '13px'}">${a.initial}</div>
+      <div>
+        <div class="act-text">${a.text}</div>
+        <div class="act-time">${a.time}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  VIEWS
+// ═══════════════════════════════════════════════════════
+function switchView(name, el) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('headerTitle').textContent = name.charAt(0).toUpperCase()+name.slice(1);
+  if (name==='admissions') renderAdmissions();
+  if (name==='discharge') renderDischarges();
+  if (name==='reports') renderReports();
+  if (name==='profile') refreshProfilePage();
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROFILE PAGE
+// ═══════════════════════════════════════════════════════
+function refreshProfilePage() {
+  if (!currentUser) return;
+  const u = currentUser;
+  const initial = u.username.charAt(0).toUpperCase();
+  const avColor = u.role === 'ADMIN' ? '#2563eb' : '#7c3aed';
+
+  const av = document.getElementById('profAvatar');
+  if (av) { av.textContent = initial; av.style.background = `linear-gradient(135deg,${avColor},${u.role==='ADMIN'?'#7c3aed':'#0891b2'})`; }
+  const nm = document.getElementById('profName'); if (nm) nm.textContent = u.username;
+  const rb = document.getElementById('profRoleBadge'); if (rb) rb.textContent = u.displayName;
+  const em = document.getElementById('profEmail'); if (em) em.textContent = u.email;
+
+  // Account info grid
+  const iu = document.getElementById('profInfoUsername'); if (iu) iu.textContent = u.username;
+  const ir = document.getElementById('profInfoRole'); if (ir) ir.textContent = u.displayName;
+  const ie = document.getElementById('profInfoEmail'); if (ie) ie.textContent = u.email;
+
+  // Live stats
+  const pc = document.getElementById('profPatCount'); if (pc) pc.textContent = patients.length;
+  const sc = document.getElementById('profStaffCount'); if (sc) sc.textContent = staffData.length;
+
+  // Clear any leftover password form state
+  clearPwForm();
+}
+
+// ─── Change Password ───────────────────────────────────
+function changePassword() {
+  const curPw  = document.getElementById('pw-current').value;
+  const newPw  = document.getElementById('pw-new').value;
+  const confPw = document.getElementById('pw-confirm').value;
+
+  // 1. All fields required
+  if (!curPw || !newPw || !confPw) {
+    showPwError('Please fill in all password fields.');
+    return;
+  }
+
+  // 2. Verify current password against the logged-in user's real password in USERS array
+  if (!currentUser) { showPwError('Session error — please log in again.'); return; }
+  const userRecord = USERS.find(u => u.username === currentUser.username);
+  if (!userRecord || curPw !== userRecord.password) {
+    showPwError('Current password is incorrect. Please try again.');
+    document.getElementById('pw-current').focus();
+    return;
+  }
+
+  // 3. New password must differ from current
+  if (newPw === curPw) {
+    showPwError('New password must be different from your current password.');
+    return;
+  }
+
+  // 4. Password rules: min 8 chars, 1 uppercase, 1 number
+  if (newPw.length < 8) {
+    showPwError('New password must be at least 8 characters long.');
+    return;
+  }
+  if (!/[A-Z]/.test(newPw)) {
+    showPwError('New password must contain at least one uppercase letter (A-Z).');
+    return;
+  }
+  if (!/[0-9]/.test(newPw)) {
+    showPwError('New password must contain at least one number (0-9).');
+    return;
+  }
+
+  // 5. Confirm must match
+  if (newPw !== confPw) {
+    showPwError('New passwords do not match. Please retype to confirm.');
+    document.getElementById('pw-confirm').focus();
+    return;
+  }
+
+  // ✅ All checks passed — update the USERS array (persisted in memory for this session)
+  userRecord.password = newPw;
+  currentUser = { ...currentUser }; // shallow copy to trigger any reactivity
+
+  // Show success
+  const errEl = document.getElementById('pwError');
+  const sucEl = document.getElementById('pwSuccess');
+  if (errEl) errEl.style.display = 'none';
+  if (sucEl) sucEl.style.display = 'flex';
+
+  // Clear fields
+  document.getElementById('pw-current').value = '';
+  document.getElementById('pw-new').value = '';
+  document.getElementById('pw-confirm').value = '';
+  const bar = document.getElementById('pwStrengthBar');
+  if (bar) bar.style.display = 'none';
+  document.getElementById('pwStrengthLabel').textContent = '';
+
+  toast('Password updated! New password is active from your next login.', 'success');
+}
+
+function showPwError(msg) {
+  const errEl = document.getElementById('pwError');
+  const msgEl = document.getElementById('pwErrorMsg');
+  const sucEl = document.getElementById('pwSuccess');
+  if (msgEl) msgEl.textContent = msg;
+  if (errEl) errEl.style.display = 'flex';
+  if (sucEl) sucEl.style.display = 'none';
+}
+
+function hidePwFeedback() {
+  const e = document.getElementById('pwError');
+  const s = document.getElementById('pwSuccess');
+  if (e) e.style.display = 'none';
+  if (s) s.style.display = 'none';
+}
+
+function clearPwForm() {
+  ['pw-current','pw-new','pw-confirm'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  hidePwFeedback();
+  const bar = document.getElementById('pwStrengthBar');
+  if (bar) bar.style.display = 'none';
+  const lbl = document.getElementById('pwStrengthLabel');
+  if (lbl) lbl.textContent = '';
+}
+
+function checkPwStrength(pw) {
+  const bar  = document.getElementById('pwStrengthBar');
+  const fill = document.getElementById('pwStrengthFill');
+  const lbl  = document.getElementById('pwStrengthLabel');
+  if (!bar || !fill || !lbl) return;
+  if (!pw) { bar.style.display = 'none'; lbl.textContent = ''; return; }
+  bar.style.display = 'block';
+
+  let score = 0;
+  if (pw.length >= 8)  score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+  const levels = [
+    { label: 'Very weak',  color: '#ef4444', pct: '20%' },
+    { label: 'Weak',       color: '#f97316', pct: '40%' },
+    { label: 'Fair',       color: '#eab308', pct: '60%' },
+    { label: 'Strong',     color: '#22c55e', pct: '80%' },
+    { label: 'Very strong',color: '#16a34a', pct: '100%' },
+  ];
+  const lvl = levels[Math.max(0, score - 1)];
+  fill.style.width = lvl.pct;
+  fill.style.background = lvl.color;
+  lbl.textContent = lvl.label;
+  lbl.style.color = lvl.color;
+}
+
+// ═══════════════════════════════════════════════════════
+//  HEADER SEARCH
+// ═══════════════════════════════════════════════════════
+function headerSearchHandler(q) {
+  // Find active view and route search accordingly
+  const active = document.querySelector('.view.active');
+  if (!active) return;
+  const viewId = active.id;
+  if (viewId === 'view-patients') {
+    patSearchQ = q.trim().toLowerCase();
+    patPage = 1; applyPatFilters();
+    // Also sync local search input if present
+    const si = document.getElementById('patSearchInput'); if(si && si.value !== q) si.value = q;
+  } else if (viewId === 'view-staff') {
+    staffSearch(q);
+    const si = document.querySelector('#view-staff .t-search input'); if(si && si.value !== q) si.value = q;
+  } else if (viewId === 'view-admissions') {
+    const tbody = document.getElementById('admTbody');
+    const rows = tbody ? tbody.querySelectorAll('tr') : [];
+    rows.forEach(r => { r.style.display = q ? (r.innerText.toLowerCase().includes(q.toLowerCase()) ? '' : 'none') : ''; });
+  } else if (viewId === 'view-discharge') {
+    const tbody = document.getElementById('disTbody');
+    const rows = tbody ? tbody.querySelectorAll('tr') : [];
+    rows.forEach(r => { r.style.display = q ? (r.innerText.toLowerCase().includes(q.toLowerCase()) ? '' : 'none') : ''; });
+  } else if (viewId === 'view-reports') {
+    // search all report tables
+    document.querySelectorAll('#view-reports tbody tr').forEach(r => {
+      r.style.display = q ? (r.innerText.toLowerCase().includes(q.toLowerCase()) ? '' : 'none') : '';
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  NOTIFICATIONS
+// ═══════════════════════════════════════════════════════
+let notifications = [
+  { id:1, icon:'🔴', msg:'<strong>Robert Martinez</strong> (PAT-000003) status changed to <strong>CRITICAL</strong> — ICU-03, Cardiac Arrhythmia', time:'8 min ago', read:false },
+  { id:2, icon:'🏥', msg:'<strong>William Wilson</strong> (PAT-000009) in ICU-01 — <strong>Stroke</strong>, left-side paralysis. Neurologist on call', time:'32 min ago', read:false },
+  { id:3, icon:'✅', msg:'<strong>Ashley Robinson</strong> (PAT-000018) discharged — Asthma Attack resolved after 3 days', time:'1 hr ago', read:false },
+  { id:4, icon:'⚠️', msg:'<strong>Nurse Jessica Taylor</strong> (EMP-000006) is on leave — Pediatrics department may need coverage', time:'2 hrs ago', read:true },
+  { id:5, icon:'🏥', msg:'<strong>Stephanie Hall</strong> (PAT-000020) admitted to Maternity-2 — Preeclampsia, BP monitored every 2 hours', time:'3 hrs ago', read:true },
+  { id:6, icon:'💊', msg:'<strong>Matthew Scott</strong> (PAT-000023) has been admitted for <strong>42 days</strong> — Alzheimer\'s, long-term care review required', time:'5 hrs ago', read:true },
+];
+let notifOpen = false;
+
+function addNotification(icon, msg) {
+  notifications.unshift({ id: Date.now(), icon, msg, time: 'Just now', read: false });
+  renderNotifBadge();
+  if (notifOpen) renderNotifList();
+}
+
+function renderNotifBadge() {
+  const unread = notifications.filter(n => !n.read).length;
+  const btn = document.getElementById('notifBtn');
+  if (!btn) return;
+  // Update badge — remove existing badge span if any
+  const old = btn.querySelector('.notif-count');
+  if (old) old.remove();
+  if (unread > 0) {
+    const badge = document.createElement('span');
+    badge.className = 'notif-count';
+    badge.textContent = unread > 9 ? '9+' : unread;
+    badge.style.cssText = 'position:absolute;top:-3px;right:-3px;background:#ef4444;color:#fff;border-radius:50%;font-size:9px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-weight:700;pointer-events:none';
+    btn.style.position = 'relative';
+    btn.appendChild(badge);
+  }
+}
+
+function renderNotifList() {
+  const list = document.getElementById('notifList');
+  if (!list) return;
+  if (notifications.length === 0) {
+    list.innerHTML = '<div style="padding:28px;text-align:center;color:var(--text-muted);font-size:13px">🎉 All caught up! No notifications.</div>';
+    return;
+  }
+  list.innerHTML = notifications.map(n => `
+    <div onclick="readNotif(${n.id})" style="padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;gap:11px;align-items:flex-start;background:${n.read?'transparent':'var(--primary-light)'};transition:background .15s">
+      <span style="font-size:18px;flex-shrink:0;margin-top:1px">${n.icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12.5px;line-height:1.45;color:var(--text)">${n.msg}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:3px">${n.time}</div>
+      </div>
+      ${!n.read ? '<div style="width:7px;height:7px;border-radius:50%;background:#2563eb;flex-shrink:0;margin-top:5px"></div>' : ''}
+    </div>
+  `).join('');
+}
+
+function readNotif(id) {
+  const n = notifications.find(x => x.id === id);
+  if (n) n.read = true;
+  renderNotifBadge();
+  renderNotifList();
+}
+
+function markAllRead() {
+  notifications.forEach(n => n.read = true);
+  renderNotifBadge();
+  renderNotifList();
+}
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notifPanel');
+  if (!panel) return;
+  notifOpen = !notifOpen;
+  panel.style.display = notifOpen ? 'block' : 'none';
+  if (notifOpen) renderNotifList();
+}
+
+// Close notification panel when clicking outside
+document.addEventListener('click', e => {
+  const panel = document.getElementById('notifPanel');
+  const btn = document.getElementById('notifBtn');
+  if (panel && notifOpen && !panel.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+    notifOpen = false;
+    panel.style.display = 'none';
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════════════════════
+function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+function closeSlide(id) { document.getElementById(id).classList.remove('open'); }
+// Click outside to close
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('overlay')) closeOverlay(e.target.id);
+  if (e.target.classList.contains('slide-overlay')) closeSlide(e.target.id);
+  if (e.target.classList.contains('confirm-overlay')) closeConfirm();
+});
+
+// ═══════════════════════════════════════════════════════
+//  DARK MODE
+// ═══════════════════════════════════════════════════════
+let dark = false;
+function toggleDark() {
+  dark = !dark;
+  document.documentElement.classList.toggle('dark', dark);
+  const t = document.getElementById('settingsToggle'); if(t) t.classList.toggle('on', dark);
+  const btn = document.getElementById('themeBtn');
+  btn.innerHTML = dark
+    ? `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="5" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`
+    : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  TOASTS
+// ═══════════════════════════════════════════════════════
+function toast(msg, type='info') {
+  const icons = {success:'✓',error:'✗',info:'ℹ'};
+  const c = document.getElementById('toastCont');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<span>${icons[type]}</span><span style="flex:1">${msg}</span><span class="toast-close" onclick="this.parentElement.remove()">×</span>`;
+  c.appendChild(t);
+  setTimeout(()=>{ if(t.parentNode) t.remove(); }, 3500);
+}
+
+// ═══════════════════════════════════════════════════════
+//  AUTH  —  Strict credential validation with RBAC
+// ═══════════════════════════════════════════════════════
+
+// ─── Registered users (in real app these live in hashed DB) ───
+const USERS = [
+  { username: 'admin', password: 'Admin@123', role: 'ADMIN',  displayName: 'Administrator', email: 'admin@hms.com' },
+  { username: 'staff', password: 'Staff@123', role: 'STAFF',  displayName: 'Staff Member',  email: 'staff@hms.com' },
+];
+
+let loginAttempts = 0;
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_SECS = 30;
+let lockoutTimer = null;
+let currentUser = null;
+
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  const msgEl = document.getElementById('loginErrorMsg');
+  msgEl.textContent = msg;
+  el.classList.add('show');
+  // shake the form card
+  const wrap = document.querySelector('.login-form-wrap');
+  wrap.classList.remove('shake');
+  void wrap.offsetWidth; // reflow to restart animation
+  wrap.classList.add('shake');
+  setTimeout(() => wrap.classList.remove('shake'), 600);
+}
+
+function hideLoginError() {
+  document.getElementById('loginError').classList.remove('show');
+}
+
+function startLockout() {
+  let secs = LOCKOUT_SECS;
+  const lockEl = document.getElementById('loginLockout');
+  const timerEl = document.getElementById('lockTimer');
+  const btn = document.getElementById('loginBtn');
+  const uInput = document.getElementById('usernameInput');
+  const pInput = document.getElementById('passwordInput');
+  lockEl.classList.add('show');
+  hideLoginError();
+  btn.disabled = true;
+  uInput.disabled = true;
+  pInput.disabled = true;
+  document.getElementById('attemptsLeft').textContent = '';
+  timerEl.textContent = secs;
+  lockoutTimer = setInterval(() => {
+    secs--;
+    timerEl.textContent = secs;
+    if (secs <= 0) {
+      clearInterval(lockoutTimer);
+      lockEl.classList.remove('show');
+      btn.disabled = false;
+      uInput.disabled = false;
+      pInput.disabled = false;
+      loginAttempts = 0;
+      document.getElementById('attemptsLeft').textContent = '';
+    }
+  }, 1000);
+}
+
+function doLogin(e) {
+  e.preventDefault();
+  if (lockoutTimer) return; // still locked
+
+  const username = document.getElementById('usernameInput').value.trim();
+  const password = document.getElementById('passwordInput').value;
+  const btn = document.getElementById('loginBtn');
+
+  // Empty field guard
+  if (!username || !password) {
+    showLoginError('Please enter both username and password.');
+    return;
+  }
+
+  // Simulate async check
+  btn.textContent = 'Verifying...';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    const user = USERS.find(u => u.username === username && u.password === password);
+
+    if (!user) {
+      loginAttempts++;
+      btn.textContent = 'Sign In';
+      btn.disabled = false;
+
+      const remaining = MAX_ATTEMPTS - loginAttempts;
+      if (remaining <= 0) {
+        startLockout();
+        return;
+      }
+
+      // Show attempts remaining hint after 2nd failure
+      if (loginAttempts >= 2) {
+        document.getElementById('attemptsLeft').textContent =
+          `${remaining} attempt${remaining === 1 ? '' : 's'} remaining before lockout`;
+      }
+
+      // Specific error messages
+      const knownUser = USERS.find(u => u.username === username);
+      if (knownUser) {
+        showLoginError('Incorrect password. Please try again.');
+      } else {
+        showLoginError('No account found with that username.');
+      }
+      return;
+    }
+
+    // ── SUCCESS ─────────────────────────────────────────
+    loginAttempts = 0;
+    document.getElementById('attemptsLeft').textContent = '';
+    hideLoginError();
+    currentUser = user;
+    btn.textContent = 'Signing in...';
+
+    setTimeout(() => {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('appShell').style.display = 'block';
+
+      // Personalise greeting
+      const h = new Date().getHours();
+      const g = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+      document.getElementById('dashGreeting').textContent = `${g}, ${user.username}! 👋`;
+
+      // Update sidebar + header user info
+      document.getElementById('sbName').textContent = user.username;
+      document.getElementById('sbRole').textContent = user.displayName;
+      const initial = user.username.charAt(0).toUpperCase();
+      document.getElementById('sbAvatar').textContent = initial;
+      document.getElementById('headerAvatar').textContent = initial;
+      // Set avatar colour: admin = blue, staff = purple
+      const avColor = user.role === 'ADMIN' ? '#2563eb' : '#7c3aed';
+      document.getElementById('sbAvatar').style.background = avColor;
+      document.getElementById('headerAvatar').style.background = avColor;
+
+      // Update profile page
+      const profAv = document.querySelector('#view-profile .profile-big-av');
+      if (profAv) { profAv.textContent = initial; profAv.style.background = `linear-gradient(135deg,${avColor},${user.role==='ADMIN'?'#7c3aed':'#0891b2'})`; }
+      const profName = document.querySelector('#view-profile .profile-name');
+      if (profName) profName.textContent = user.username;
+      const profRole = document.querySelector('#view-profile .badge-admitted');
+      if (profRole) profRole.textContent = user.displayName;
+      const profEmail = document.querySelector('#view-profile [style*="admin@"]') || document.querySelector('#view-profile div[style*="color:var(--text-muted)"]');
+      if (profEmail) profEmail.textContent = user.email;
+
+      // Apply RBAC — Staff cannot add/edit/delete or access reports
+      applyRBAC(user.role);
+
+      patFiltered = [...patients];
+      staffFiltered = [...staffData];
+      renderPatients();
+      renderStaff();
+      renderAdmissions();
+      renderDischarges();
+      updateDashStats();
+      renderRecentActivity();
+      initCharts();
+      renderNotifBadge();  // show unread badge on bell
+      toast(`Welcome back, ${user.username}! 👋`, 'success');
+    }, 400);
+
+  }, 600); // simulated network delay
+}
+
+function applyRBAC(role) {
+  const isAdmin = role === 'ADMIN';
+  // Nav items only admins see
+  const reportBtn = document.querySelector('[onclick="switchView(\'reports\',this)"]');
+  if (reportBtn) reportBtn.style.display = isAdmin ? '' : 'none';
+  // Add-patient / Add-staff buttons
+  document.querySelectorAll('[onclick="openAddPatient()"]').forEach(el => el.style.display = isAdmin ? '' : 'none');
+  document.querySelectorAll('[onclick="openAddStaff()"]').forEach(el => el.style.display = isAdmin ? '' : 'none');
+  // Dashboard quick-action buttons (Add Patient / Add Staff)
+  document.querySelectorAll('#view-dashboard .page-header .btn').forEach(el => el.style.display = isAdmin ? '' : 'none');
+  // Store role so table renderers can hide action columns
+  window._hmsRole = role;
+}
+
+function togglePw() {
+  const i = document.getElementById('passwordInput');
+  i.type = i.type === 'password' ? 'text' : 'password';
+  // Clear errors when user starts typing
+  hideLoginError();
+}
+
+// Clear error when user edits inputs
+document.addEventListener('DOMContentLoaded', () => {
+  ['usernameInput','passwordInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', hideLoginError);
+  });
+});
+
+function doLogout() {
+  currentUser = null;
+  loginAttempts = 0;
+  if (lockoutTimer) { clearInterval(lockoutTimer); lockoutTimer = null; }
+  document.getElementById('loginLockout').classList.remove('show');
+  hideLoginError();
+  document.getElementById('usernameInput').disabled = false;
+  document.getElementById('passwordInput').disabled = false;
+  document.getElementById('loginBtn').textContent = 'Sign In';
+  document.getElementById('loginBtn').disabled = false;
+  document.getElementById('attemptsLeft').textContent = '';
+  // Reset RBAC UI
+  document.querySelectorAll('.staff-hidden').forEach(el => el.classList.remove('staff-hidden'));
+  document.getElementById('appShell').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'grid';
+  toast('Logged out successfully', 'success');
+}
+
+// ═══════════════════════════════════════════════════════
+//  CHARTS
+// ═══════════════════════════════════════════════════════
+let chartInstances = {};
+function initCharts() {
+  const isDark = dark;
+  const gc2 = isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.05)';
+  const tc = isDark?'#94a3b8':'#64748b';
+  if (chartInstances.area) chartInstances.area.destroy();
+  if (chartInstances.donut) chartInstances.donut.destroy();
+  const ac = document.getElementById('admissionsChart').getContext('2d');
+  const grad = ac.createLinearGradient(0,0,0,210);
+  grad.addColorStop(0,'rgba(37,99,235,.28)');
+  grad.addColorStop(1,'rgba(37,99,235,0)');
+  chartInstances.area = new Chart(ac,{type:'line',data:{labels:['Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul'],datasets:[{label:'Admissions',data:[58,72,65,88,76,94,82,68,75,88,92,78],borderColor:'#2563eb',borderWidth:2.5,backgroundColor:grad,fill:true,tension:.4,pointBackgroundColor:'#2563eb',pointRadius:3,pointHoverRadius:5}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:isDark?'#1e293b':'#fff',titleColor:isDark?'#f1f5f9':'#0f172a',bodyColor:isDark?'#94a3b8':'#475569',borderColor:isDark?'#334155':'#e2e8f0',borderWidth:1,padding:10,cornerRadius:8}},scales:{x:{grid:{color:gc2},ticks:{color:tc,font:{size:11}}},y:{grid:{color:gc2},ticks:{color:tc,font:{size:11}}}}}});
+  const sc = document.getElementById('staffChart').getContext('2d');
+  chartInstances.donut = new Chart(sc,{type:'doughnut',data:{labels:['Doctors','Nurses','Receptionists','Pharmacists','Technicians'],datasets:[{data:[4,4,1,1,0],backgroundColor:['#3b82f6','#ec4899','#22c55e','#a855f7','#f97316'],borderWidth:0,hoverOffset:5}]},options:{responsive:true,cutout:'60%',plugins:{legend:{position:'bottom',labels:{padding:12,font:{size:11},color:tc}},tooltip:{backgroundColor:isDark?'#1e293b':'#fff',titleColor:isDark?'#f1f5f9':'#0f172a',bodyColor:isDark?'#94a3b8':'#475569',borderColor:isDark?'#334155':'#e2e8f0',borderWidth:1,cornerRadius:8}}}});
+}
+</script>
+</body>
+</html>
