@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum BloodGroup {
+  A_POS
+  A_NEG
+  B_POS
+  B_NEG
+  AB_POS
+  AB_NEG
+  O_POS
+  O_NEG
+}
+
+enum PatientStatus {
+  ADMITTED
+  DISCHARGED
+  PENDING
+  CRITICAL
+}
+
+enum StaffRole {
+  DOCTOR
+  NURSE
+  RECEPTIONIST
+  PHARMACIST
+  TECHNICIAN
+  ADMIN_STAFF
+  OTHER
+}
+
+enum StaffStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+}
+
+model User {
+  id           String     @id @default(cuid())
+  username     String     @unique
+  email        String     @unique
+  password     String
+  role         UserRole   @default(STAFF)
+  isActive     Boolean    @default(true)
+  lastLoginAt  DateTime?
+  refreshToken String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  auditLogs    AuditLog[]
+
+  @@index([username])
+  @@index([email])
+}
+
+model Patient {
+  id                    String        @id @default(cuid())
+  patientId             String        @unique
+  firstName             String
+  lastName              String
+  gender                Gender
+  dateOfBirth           DateTime
+  age                   Int
+  bloodGroup            BloodGroup?
+  phone                 String
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  address               String?
+  disease               String
+  doctorAssigned        String
+  roomNumber            String?
+  admissionDate         DateTime      @default(now())
+  dischargeDate         DateTime?
+  status                PatientStatus @default(ADMITTED)
+  medicalNotes          String?       @db.Text
+  isDeleted             Boolean       @default(false)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@index([patientId])
+  @@index([status])
+  @@index([doctorAssigned])
+  @@index([admissionDate])
+  @@index([isDeleted])
+}
+
+model Staff {
+  id               String      @id @default(cuid())
+  employeeId       String      @unique
+  fullName         String
+  role             StaffRole
+  department       String
+  phone            String
+  email            String      @unique
+  joiningDate      DateTime
+  salary           Decimal?    @db.Decimal(10, 2)
+  status           StaffStatus @default(ACTIVE)
+  profilePhoto     String?
+  emergencyContact String?
+  isDeleted        Boolean     @default(false)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@index([employeeId])
+  @@index([role])
+  @@index([department])
+  @@index([status])
+  @@index([isDeleted])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity])
+  @@index([createdAt])
+}
