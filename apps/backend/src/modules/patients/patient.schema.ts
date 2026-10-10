@@ -19,6 +19,7 @@ export const createPatientSchema = z.object({
   doctorAssigned: z.string().min(1),
   roomNumber: z.string().optional(),
   admissionDate: z.string().transform((v) => new Date(v)).optional(),
+  dischargeDate: z.string().nullable().optional().transform((v) => v ? new Date(v) : null),
   status: z.enum(PatientStatusValues).optional().default('ADMITTED'),
   medicalNotes: z.string().optional(),
 });
