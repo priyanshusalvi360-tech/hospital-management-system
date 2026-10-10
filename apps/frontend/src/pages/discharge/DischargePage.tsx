@@ -1,7 +1,7 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Search, Eye, PlusCircle, CalendarCheck } from 'lucide-react';
+import { Search, Eye, PlusCircle, CalendarCheck, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { patientService } from '../../services/patientService';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -139,13 +139,25 @@ export const DischargePage = () => {
                         <span className="font-semibold text-blue-600 dark:text-blue-400">{days}</span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Link
-                          to={`/patients/${patient.id}`}
-                          className="p-1.5 inline-block text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-                          title="View details"
-                        >
-                          <Eye size={18} />
-                        </Link>
+                        <div className="flex items-center justify-end gap-1.5">
+                          {isAdmin() && (
+                            <Link
+                              to={`/patients?action=readmit&patientId=${patient.id}`}
+                              className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50 rounded-lg border border-emerald-200 dark:border-emerald-800 transition-colors"
+                              title="Re-admit patient for new disease / treatment"
+                            >
+                              <RotateCcw size={13} />
+                              <span>Re-admit</span>
+                            </Link>
+                          )}
+                          <Link
+                            to={`/patients/${patient.id}`}
+                            className="p-1.5 inline-block text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                            title="View details"
+                          >
+                            <Eye size={18} />
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   );
