@@ -238,8 +238,21 @@ export const PatientsPage = () => {
 
 const PatientFormModal = ({ patient, onClose, onSuccess }: { patient?: any, onClose: () => void, onSuccess: () => void }) => {
   const isEditing = !!patient;
+
+  let initialNotes = patient?.medicalNotes || '';
+  let preservedDailyReports: any[] = [];
+  try {
+    const parsed = JSON.parse(initialNotes);
+    if (parsed && typeof parsed === 'object') {
+      initialNotes = parsed.generalNotes || '';
+      preservedDailyReports = parsed.dailyReports || [];
+    }
+  } catch (_) {}
+
   const { register, handleSubmit, formState: { errors } } = useForm({
-    defaultValues: patient || { status: 'PENDING', gender: 'MALE', bloodGroup: 'A_POS' }
+    defaultValues: patient 
+      ? { ...patient, medicalNotes: initialNotes }
+      : { status: 'PENDING', gender: 'MALE', bloodGroup: 'A_POS' }
   });
 
   const mutation = useMutation({
@@ -259,6 +272,12 @@ const PatientFormModal = ({ patient, onClose, onSuccess }: { patient?: any, onCl
     if (!payload.dateOfBirth && payload.age) {
       const birthYear = new Date().getFullYear() - payload.age;
       payload.dateOfBirth = `${birthYear}-01-01`;
+    }
+    if (preservedDailyReports.length > 0) {
+      payload.medicalNotes = JSON.stringify({
+        generalNotes: payload.medicalNotes || '',
+        dailyReports: preservedDailyReports,
+      });
     }
     mutation.mutate(payload);
   };
