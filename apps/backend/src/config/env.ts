@@ -1,4 +1,9 @@
 import { z } from 'zod';
+import path from 'path';
+import { config } from 'dotenv';
+
+// Load .env before any env validation — fixes ESM import-hoisting issue
+config({ path: path.resolve(process.cwd(), '.env') });
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),

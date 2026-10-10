@@ -37,7 +37,8 @@ export const getPatientById = async (id: string) => {
 
 export const createPatient = async (data: CreatePatientInput) => {
   const patientId = await generatePatientId();
-  return prisma.patient.create({ data: { ...data, patientId } });
+  const dateOfBirth = data.dateOfBirth || new Date(new Date().getFullYear() - (data.age || 30), 0, 1);
+  return prisma.patient.create({ data: { ...data, dateOfBirth, patientId } });
 };
 
 export const updatePatient = async (id: string, data: UpdatePatientInput) => {

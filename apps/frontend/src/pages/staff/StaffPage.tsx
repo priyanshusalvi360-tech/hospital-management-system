@@ -46,6 +46,9 @@ export const StaffPage = () => {
     onSuccess: () => {
       toast.success('Staff member deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['staff'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['staff-distribution'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
     },
     onError: () => toast.error('Failed to delete staff member'),
   });
@@ -57,6 +60,9 @@ export const StaffPage = () => {
       setRoleFilter('');
     }
     queryClient.invalidateQueries({ queryKey: ['staff'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    queryClient.invalidateQueries({ queryKey: ['staff-distribution'] });
+    queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
     setShowForm(false);
     setSelectedStaff(null);
   };
@@ -163,10 +169,10 @@ export const StaffPage = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-700 dark:text-indigo-400 text-xs font-medium">
-                          {getInitials(staff.firstName, staff.lastName)}
+                          {getInitials(staff.fullName || '?')}
                         </div>
                         <span className="font-medium text-gray-900 dark:text-white">
-                          {staff.firstName} {staff.lastName}
+                          {staff.fullName}
                         </span>
                       </div>
                     </td>
@@ -264,10 +270,20 @@ const StaffFormModal = ({
       toast.success(isEditing ? 'Staff updated successfully' : 'Staff added successfully!');
       onSuccess(!isEditing);
     },
-    onError: () => toast.error(isEditing ? 'Failed to update staff' : 'Failed to create staff'),
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || err?.response?.data?.errors?.[0]?.message || (isEditing ? 'Failed to update staff' : 'Failed to create staff');
+      toast.error(msg);
+    },
   });
 
-  const onSubmit = (data: any) => mutation.mutate(data);
+  const onSubmit = (data: any) => {
+    const payload = {
+      ...data,
+      department: data.department?.trim() || 'General',
+      joiningDate: data.joiningDate || new Date().toISOString().split('T')[0],
+    };
+    mutation.mutate(payload);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm">
@@ -288,15 +304,9 @@ const StaffFormModal = ({
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name *</label>
-              <input {...register('firstName', { required: true })} className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name *</label>
-              <input {...register('lastName', { required: true })} className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name *</label>
+            <input {...register('fullName', { required: true })} className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

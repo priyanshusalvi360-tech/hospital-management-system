@@ -31,6 +31,9 @@ export const PatientsPage = () => {
     onSuccess: () => {
       toast.success('Patient deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['patients'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admissions-chart'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
     },
     onError: () => toast.error('Failed to delete patient'),
   });
@@ -44,6 +47,9 @@ export const PatientsPage = () => {
       setStatusFilter('');
     }
     queryClient.invalidateQueries({ queryKey: ['patients'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    queryClient.invalidateQueries({ queryKey: ['admissions-chart'] });
+    queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
     setShowForm(false);
     setSelectedPatient(null);
     toast.success(isNew ? 'Patient added successfully!' : 'Patient updated successfully!');
@@ -144,12 +150,12 @@ export const PatientsPage = () => {
                   <tr key={patient.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                     <td className="px-6 py-4">
                       <span className="font-mono text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded">
-                        {patient.patientId || `PAT-\${patient.id.substring(0, 6)}`}
+                        {patient.patientId || `PAT-${patient.id.substring(0, 6)}`}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium \${getStatusColor(patient.status).replace('bg-', 'bg-opacity-20 text-').replace('text-white', '')}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${getStatusColor(patient.status).replace('bg-', 'bg-opacity-20 text-').replace('text-white', '')}`}>
                           {getInitials(patient.firstName, patient.lastName)}
                         </div>
                         <span className="font-medium text-gray-900 dark:text-white">
@@ -162,15 +168,15 @@ export const PatientsPage = () => {
                     </td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{patient.disease}</td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{patient.doctorAssigned}</td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{patient.roomNumber || '—'}</td>
+                    <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{patient.roomNumber || '-'}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 text-xs font-medium rounded-full \${getStatusColor(patient.status)}`}>
+                      <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${getStatusColor(patient.status)}`}>
                         {patient.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Link to={`/patients/\${patient.id}`} className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors">
+                        <Link to={`/patients/${patient.id}`} className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors">
                           <Eye size={18} />
                         </Link>
                         {isAdmin() && (
@@ -222,7 +228,7 @@ export const PatientsPage = () => {
           <PatientFormModal 
             patient={selectedPatient} 
             onClose={() => setShowForm(false)} 
-            onSuccess={() => { setShowForm(false); queryClient.invalidateQueries({ queryKey: ['patients'] }); }} 
+            onSuccess={() => { setShowForm(false); queryClient.invalidateQueries({ queryKey: ['patients'] }); queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] }); queryClient.invalidateQueries({ queryKey: ['admissions-chart'] }); }} 
           />
         )}
       </AnimatePresence>
@@ -233,19 +239,29 @@ export const PatientsPage = () => {
 const PatientFormModal = ({ patient, onClose, onSuccess }: { patient?: any, onClose: () => void, onSuccess: () => void }) => {
   const isEditing = !!patient;
   const { register, handleSubmit, formState: { errors } } = useForm({
-    defaultValues: patient || { status: 'PENDING', gender: 'MALE', bloodGroup: 'A+' }
+    defaultValues: patient || { status: 'PENDING', gender: 'MALE', bloodGroup: 'A_POS' }
   });
 
   const mutation = useMutation({
     mutationFn: (data: any) => isEditing ? patientService.update(patient.id, data) : patientService.create(data),
     onSuccess: () => {
-      toast.success(`Patient \${isEditing ? 'updated' : 'created'} successfully`);
+      toast.success(`Patient ${isEditing ? 'updated' : 'created'} successfully`);
       onSuccess();
     },
-    onError: () => toast.error(`Failed to \${isEditing ? 'update' : 'create'} patient`)
+    onError: () => toast.error(`Failed to ${isEditing ? 'update' : 'create'} patient`)
   });
 
-  const onSubmit = (data: any) => mutation.mutate(data);
+  const onSubmit = (data: any) => {
+    const payload = { ...data };
+    if (payload.age !== undefined && payload.age !== '') {
+      payload.age = Number(payload.age);
+    }
+    if (!payload.dateOfBirth && payload.age) {
+      const birthYear = new Date().getFullYear() - payload.age;
+      payload.dateOfBirth = `${birthYear}-01-01`;
+    }
+    mutation.mutate(payload);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm">
@@ -300,7 +316,7 @@ const PatientFormModal = ({ patient, onClose, onSuccess }: { patient?: any, onCl
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Blood Group</label>
               <select {...register('bloodGroup')} className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
-                {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                {([['A_POS','A+'],['A_NEG','A-'],['B_POS','B+'],['B_NEG','B-'],['AB_POS','AB+'],['AB_NEG','AB-'],['O_POS','O+'],['O_NEG','O-']]).map(([val,label]) => <option key={val} value={val}>{label}</option>)}
               </select>
             </div>
           </div>

@@ -1,21 +1,34 @@
 import api from '../lib/axios';
 import type { DashboardStats, AuditLog, ApiResponse } from '../types';
 
+interface DashboardData {
+  stats: DashboardStats;
+  admissionsChart: { month: string; count: number }[];
+  staffDistribution: { role: string; count: number }[];
+  recentActivity: AuditLog[];
+}
+
+// Single endpoint fetches everything
+const getDashboardAll = async (): Promise<DashboardData> => {
+  const res = await api.get<ApiResponse<DashboardData>>('/dashboard');
+  return res.data.data;
+};
+
 export const dashboardService = {
   getStats: async () => {
-    const res = await api.get<ApiResponse<DashboardStats>>('/dashboard/stats');
-    return res.data;
+    const d = await getDashboardAll();
+    return { data: d.stats, success: true, message: 'ok' };
   },
   getAdmissionsChart: async () => {
-    const res = await api.get<ApiResponse<{ month: string; count: number }[]>>('/dashboard/charts/admissions');
-    return res.data;
+    const d = await getDashboardAll();
+    return { data: d.admissionsChart, success: true, message: 'ok' };
   },
   getStaffDistribution: async () => {
-    const res = await api.get<ApiResponse<{ role: string; count: number }[]>>('/dashboard/charts/staff-distribution');
-    return res.data;
+    const d = await getDashboardAll();
+    return { data: d.staffDistribution, success: true, message: 'ok' };
   },
   getRecentActivity: async () => {
-    const res = await api.get<ApiResponse<AuditLog[]>>('/dashboard/activity');
-    return res.data;
+    const d = await getDashboardAll();
+    return { data: d.recentActivity, success: true, message: 'ok' };
   },
 };

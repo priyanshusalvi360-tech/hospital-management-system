@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Users, BedDouble, CheckCircle, AlertCircle, Users2, Stethoscope, Heart, Phone, Clock, Activity, TrendingUp, Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -36,21 +36,29 @@ export const DashboardPage = () => {
   const { data: statsData, isLoading: loadingStats } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: () => dashboardService.getStats(),
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   const { data: admissionsData, isLoading: loadingAdmissions } = useQuery({
     queryKey: ['admissions-chart'],
     queryFn: () => dashboardService.getAdmissionsChart(),
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   const { data: staffData, isLoading: loadingStaff } = useQuery({
     queryKey: ['staff-distribution'],
     queryFn: () => dashboardService.getStaffDistribution(),
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   const { data: activityData, isLoading: loadingActivity } = useQuery({
     queryKey: ['recent-activity'],
     queryFn: () => dashboardService.getRecentActivity(),
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   const stats: any = (statsData as any)?.data ?? {};
@@ -128,7 +136,7 @@ export const DashboardPage = () => {
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `\${value}`} />
+                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" className="dark:stroke-gray-700" />
                   <Tooltip 
                     contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
@@ -163,7 +171,7 @@ export const DashboardPage = () => {
                     nameKey="role"
                   >
                     {staffDistribution.map((entry: any, index: number) => (
-                      <Cell key={`cell-\${index}`} fill={pieColors[index % pieColors.length]} />
+                      <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
                     ))}
                   </Pie>
                   <Tooltip 
@@ -223,7 +231,7 @@ export const DashboardPage = () => {
 const StatCard = ({ title, value, icon, bg }: { title: string; value: number | string; icon: React.ReactNode; bg: string }) => (
   <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
     <div className="flex items-center gap-4">
-      <div className={`w-14 h-14 rounded-full \${bg} flex items-center justify-center`}>
+      <div className={`w-14 h-14 rounded-full ${bg} flex items-center justify-center`}>
         {icon}
       </div>
       <div>

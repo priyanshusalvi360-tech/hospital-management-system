@@ -36,7 +36,9 @@ export const getStaffById = async (id: string) => {
 
 export const createStaff = async (data: CreateStaffInput) => {
   const employeeId = await generateEmployeeId();
-  return prisma.staff.create({ data: { ...data, employeeId } });
+  const joiningDate = data.joiningDate || new Date();
+  const department = data.department || 'General';
+  return prisma.staff.create({ data: { ...data, joiningDate, department, employeeId } });
 };
 
 export const updateStaff = async (id: string, data: UpdateStaffInput) => {

@@ -1,4 +1,5 @@
-require('dotenv').config();
+// env loaded in src/config/env.ts before Zod parse
+
 
 import express from 'express';
 import cors from 'cors';
@@ -24,7 +25,7 @@ app.use(cors({
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 50000,
   message: { success: false, message: 'Too many requests' },
 });
 app.use('/api', limiter);

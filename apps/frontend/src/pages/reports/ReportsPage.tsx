@@ -34,13 +34,13 @@ export const ReportsPage = () => {
   });
 
   const handleExport = (type: string) => {
-    toast.info(`Export feature (\${type}) — coming soon!`);
+    toast.info(`Export feature (${type}) — coming soon!`);
   };
 
   const renderTabButton = (id: string, label: string, icon: React.ReactNode) => (
     <button
       onClick={() => setActiveTab(id)}
-      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all \${
+      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
         activeTab === id 
           ? 'bg-blue-600 text-white shadow-sm' 
           : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'

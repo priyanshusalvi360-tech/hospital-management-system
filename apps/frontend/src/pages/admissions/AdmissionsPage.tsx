@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Eye } from 'lucide-react';
@@ -78,12 +78,12 @@ export const AdmissionsPage = () => {
                   <tr key={patient.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                     <td className="px-6 py-4">
                       <span className="font-mono text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded">
-                        {patient.patientId || `PAT-\${patient.id.substring(0, 6)}`}
+                        {patient.patientId || `PAT-${patient.id.substring(0, 6)}`}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium \${getStatusColor(patient.status).replace('bg-', 'bg-opacity-20 text-').replace('text-white', '')}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${getStatusColor(patient.status).replace('bg-', 'bg-opacity-20 text-').replace('text-white', '')}`}>
                           {getInitials(patient.firstName, patient.lastName)}
                         </div>
                         <span className="font-medium text-gray-900 dark:text-white">
@@ -95,12 +95,12 @@ export const AdmissionsPage = () => {
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{patient.doctorAssigned}</td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{patient.roomNumber || '—'}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 text-xs font-medium rounded-full \${getStatusColor(patient.status)}`}>
+                      <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${getStatusColor(patient.status)}`}>
                         {patient.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Link to={`/patients/\${patient.id}`} className="p-1.5 inline-block text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors">
+                      <Link to={`/patients/${patient.id}`} className="p-1.5 inline-block text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors">
                         <Eye size={18} />
                       </Link>
                     </td>

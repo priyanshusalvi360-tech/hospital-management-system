@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 export interface User {
   id: string;
@@ -18,17 +17,18 @@ interface AuthState {
   isAdmin: () => boolean;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      user: null,
-      accessToken: null,
-      setAuth: (user, accessToken) => set({ user, accessToken }),
-      setToken: (accessToken) => set({ accessToken }),
-      clearAuth: () => set({ user: null, accessToken: null }),
-      isAuthenticated: () => !!get().user && !!get().accessToken,
-      isAdmin: () => get().user?.role === 'ADMIN',
-    }),
-    { name: 'hms-auth' }
-  )
-);
+// Clear any previously persisted auth storage so refreshing always requires re-login
+try {
+  localStorage.removeItem('hms-auth');
+  sessionStorage.removeItem('hms-auth');
+} catch (_) {}
+
+export const useAuthStore = create<AuthState>((set, get) => ({
+  user: null,
+  accessToken: null,
+  setAuth: (user, accessToken) => set({ user, accessToken }),
+  setToken: (accessToken) => set({ accessToken }),
+  clearAuth: () => set({ user: null, accessToken: null }),
+  isAuthenticated: () => !!get().user && !!get().accessToken,
+  isAdmin: () => get().user?.role === 'ADMIN',
+}));

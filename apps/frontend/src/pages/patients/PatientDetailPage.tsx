@@ -95,7 +95,7 @@ export const PatientDetailPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Profile Card */}
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6 flex flex-col items-center text-center shadow-sm h-fit">
-          <div className={`w-32 h-32 rounded-full flex items-center justify-center text-4xl font-bold mb-4 shadow-inner \${getStatusColor(patient.status).replace('text-white', '').replace('bg-', 'bg-opacity-20 text-')}`}>
+          <div className={`w-32 h-32 rounded-full flex items-center justify-center text-4xl font-bold mb-4 shadow-inner ${getStatusColor(patient.status).replace('text-white', '').replace('bg-', 'bg-opacity-20 text-')}`}>
             {getInitials(patient.firstName, patient.lastName)}
           </div>
           
@@ -105,9 +105,9 @@ export const PatientDetailPage = () => {
           
           <div className="flex items-center justify-center gap-2 mb-4">
             <span className="font-mono text-xs px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded">
-              {patient.patientId || `PAT-\${patient.id.substring(0, 6)}`}
+              {patient.patientId || `PAT-${patient.id.substring(0, 6)}`}
             </span>
-            <span className={`text-xs font-medium px-2.5 py-1 rounded-full \${getStatusColor(patient.status)}`}>
+            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${getStatusColor(patient.status)}`}>
               {patient.status}
             </span>
           </div>
@@ -217,7 +217,7 @@ const InfoRow = ({ icon, label, value, valueClass = "text-gray-900 dark:text-whi
     <div className="mt-0.5 text-gray-400 dark:text-gray-500">{icon}</div>
     <div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{label}</p>
-      <p className={`text-sm \${valueClass}`}>{value}</p>
+      <p className={`text-sm ${valueClass}`}>{value}</p>
     </div>
   </div>
 );
