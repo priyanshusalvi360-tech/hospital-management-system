@@ -18,6 +18,7 @@ export const getPatients = async (query: any) => {
       { lastName: { contains: query.search, mode: 'insensitive' } },
       { patientId: { contains: query.search, mode: 'insensitive' } },
       { phone: { contains: query.search } },
+      { disease: { contains: query.search, mode: 'insensitive' } },
     ];
   }
 
