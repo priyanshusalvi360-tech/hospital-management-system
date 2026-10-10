@@ -315,36 +315,6 @@ export const ReportsPage = () => {
               </button>
 
               <button
-                onClick={() => setPatientStatusFilter('CRITICAL')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                  patientStatusFilter === 'CRITICAL'
-                    ? 'bg-red-600 text-white shadow-sm ring-2 ring-red-400/30'
-                    : 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900/40 hover:bg-red-100'
-                }`}
-              >
-                <AlertCircle size={13} />
-                Critical
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-red-200/60 dark:bg-red-800/60">
-                  {statusCounts.critical}
-                </span>
-              </button>
-
-              <button
-                onClick={() => setPatientStatusFilter('DISCHARGED')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                  patientStatusFilter === 'DISCHARGED'
-                    ? 'bg-green-600 text-white shadow-sm ring-2 ring-green-400/30'
-                    : 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900/40 hover:bg-green-100'
-                }`}
-              >
-                <CheckCircle size={13} />
-                Discharged
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-green-200/60 dark:bg-green-800/60">
-                  {statusCounts.discharged}
-                </span>
-              </button>
-
-              <button
                 onClick={() => setPatientStatusFilter('ADMITTED')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                   patientStatusFilter === 'ADMITTED'
@@ -360,6 +330,21 @@ export const ReportsPage = () => {
               </button>
 
               <button
+                onClick={() => setPatientStatusFilter('CRITICAL')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  patientStatusFilter === 'CRITICAL'
+                    ? 'bg-red-600 text-white shadow-sm ring-2 ring-red-400/30'
+                    : 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900/40 hover:bg-red-100'
+                }`}
+              >
+                <AlertCircle size={13} />
+                Critical
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-red-200/60 dark:bg-red-800/60">
+                  {statusCounts.critical}
+                </span>
+              </button>
+
+              <button
                 onClick={() => setPatientStatusFilter('PENDING')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                   patientStatusFilter === 'PENDING'
@@ -371,6 +356,21 @@ export const ReportsPage = () => {
                 Pending
                 <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-yellow-200/60 dark:bg-yellow-800/60">
                   {statusCounts.pending}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setPatientStatusFilter('DISCHARGED')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  patientStatusFilter === 'DISCHARGED'
+                    ? 'bg-green-600 text-white shadow-sm ring-2 ring-green-400/30'
+                    : 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900/40 hover:bg-green-100'
+                }`}
+              >
+                <CheckCircle size={13} />
+                Discharged
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-green-200/60 dark:bg-green-800/60">
+                  {statusCounts.discharged}
                 </span>
               </button>
             </div>
