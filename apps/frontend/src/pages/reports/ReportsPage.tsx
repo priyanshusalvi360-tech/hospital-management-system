@@ -189,10 +189,168 @@ export const ReportsPage = () => {
     window.print();
   };
 
+  const handleDownloadPatientReport = () => {
+    if (!activePatient) return;
+
+    const vitalsRows = (activePatient.dailyReports || [])
+      .map(r => `
+        <tr>
+          <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: 500;">${formatDate(r.date, 'MMM dd, yyyy - hh:mm a')}</td>
+          <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold; color: #1e3a8a;">${r.condition} (${r.conditionScore}/100)</td>
+          <td style="padding: 10px; border: 1px solid #e2e8f0;">${r.vitals?.temperature ? r.vitals.temperature + '°F' : '—'}</td>
+          <td style="padding: 10px; border: 1px solid #e2e8f0;">${r.vitals?.bloodPressure || '—'}</td>
+          <td style="padding: 10px; border: 1px solid #e2e8f0;">${r.vitals?.heartRate ? r.vitals.heartRate + ' bpm' : '—'}</td>
+          <td style="padding: 10px; border: 1px solid #e2e8f0;">${r.conditionNotes || (r as any).symptoms || '—'}</td>
+          <td style="padding: 10px; border: 1px solid #e2e8f0; font-style: italic; color: #334155;">"${r.nurseReview || '—'}"</td>
+        </tr>
+      `).join('');
+
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medical Report - ${activePatient.firstName} ${activePatient.lastName} (${activePatient.patientId})</title>
+  <style>
+    @page { size: A4 portrait; margin: 15mm; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 30px; color: #0f172a; background: #ffffff; line-height: 1.5; }
+    .header { border-bottom: 3px solid #2563eb; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .hospital-title { font-size: 22px; font-weight: 800; color: #1e3a8a; margin: 0; letter-spacing: -0.5px; }
+    .hospital-sub { font-size: 12px; color: #64748b; margin: 3px 0 0 0; }
+    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 700; text-transform: uppercase; background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+    .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .meta-cell { font-size: 12px; }
+    .meta-label { color: #64748b; font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+    .meta-val { font-weight: 600; color: #0f172a; margin-top: 2px; }
+    .section-head { font-size: 14px; font-weight: 800; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin: 24px 0 14px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; margin-bottom: 16px; }
+    th { background: #f1f5f9; color: #334155; font-weight: 700; padding: 8px 10px; border: 1px solid #cbd5e1; }
+    .notes-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 8px; font-size: 12px; white-space: pre-line; }
+    .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: flex-end; font-size: 11px; color: #64748b; }
+    .sign-box { text-align: center; width: 220px; }
+    .sign-line { border-top: 1px solid #0f172a; margin-bottom: 4px; }
+    .print-btn-bar { text-align: right; margin-bottom: 20px; }
+    .btn-print { background: #2563eb; color: #fff; padding: 8px 18px; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; }
+    @media print {
+      body { margin: 0; }
+      .print-btn-bar { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="print-btn-bar">
+    <button class="btn-print" onclick="window.print()">🖨️ Print Dossier / Save as PDF</button>
+  </div>
+
+  <div class="header">
+    <div>
+      <h1 class="hospital-title">HOSPITAL MANAGEMENT SYSTEM</h1>
+      <p class="hospital-sub">Department of Inpatient Care & Medical Records</p>
+      <p class="hospital-sub">Confidential Individual Patient Progress Report</p>
+    </div>
+    <div style="text-align: right;">
+      <span class="status-badge">${activePatient.status}</span>
+      <p style="font-family: monospace; font-size: 12px; font-weight: bold; margin: 5px 0 0 0; color: #1e293b;">${activePatient.patientId}</p>
+      <p style="font-size: 10px; color: #94a3b8; margin: 2px 0 0 0;">Report Date: ${new Date().toLocaleDateString()}</p>
+    </div>
+  </div>
+
+  <div class="meta-grid">
+    <div class="meta-cell">
+      <div class="meta-label">Patient Name</div>
+      <div class="meta-val">${activePatient.firstName} ${activePatient.lastName}</div>
+    </div>
+    <div class="meta-cell">
+      <div class="meta-label">Age / Gender</div>
+      <div class="meta-val">${activePatient.age} yrs • ${activePatient.gender}</div>
+    </div>
+    <div class="meta-cell">
+      <div class="meta-label">Blood Group</div>
+      <div class="meta-val">${activePatient.bloodGroup ? activePatient.bloodGroup.replace('_', ' ') : 'N/A'}</div>
+    </div>
+    <div class="meta-cell">
+      <div class="meta-label">Contact Phone</div>
+      <div class="meta-val">${activePatient.phone}</div>
+    </div>
+    <div class="meta-cell">
+      <div class="meta-label">Primary Diagnosis</div>
+      <div class="meta-val">${activePatient.disease}</div>
+    </div>
+    <div class="meta-cell">
+      <div class="meta-label">Attending Doctor</div>
+      <div class="meta-val">Dr. ${activePatient.doctorAssigned}</div>
+    </div>
+    <div class="meta-cell">
+      <div class="meta-label">Allocated Ward / Room</div>
+      <div class="meta-val">${activePatient.roomNumber || 'Not Assigned'}</div>
+    </div>
+    <div class="meta-cell">
+      <div class="meta-label">Admission / Discharge</div>
+      <div class="meta-val">
+        ${formatDate(activePatient.admissionDate, 'MMM dd, yyyy')}
+        ${activePatient.dischargeDate ? ' → ' + formatDate(activePatient.dischargeDate, 'MMM dd, yyyy') : ''}
+      </div>
+    </div>
+  </div>
+
+  <div class="section-head">Clinical Condition & Nurse Reviews Log (${activePatient.dailyReports.length} Recorded Entries)</div>
+  ${activePatient.dailyReports.length > 0 ? `
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 18%;">Observation Time</th>
+          <th style="width: 14%;">Condition (Score)</th>
+          <th style="width: 9%;">Temp</th>
+          <th style="width: 10%;">Blood Pressure</th>
+          <th style="width: 9%;">Heart Rate</th>
+          <th style="width: 15%;">Symptoms</th>
+          <th style="width: 25%;">Nurse Review & Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${vitalsRows}
+      </tbody>
+    </table>
+  ` : `
+    <p style="font-style: italic; color: #64748b; font-size: 12px; margin-bottom: 20px;">No daily condition reports or nurse observations recorded yet for this patient stay.</p>
+  `}
+
+  <div class="section-head">General Medical Notes & Clinical History</div>
+  <div class="notes-box">
+    ${activePatient.generalNotes ? activePatient.generalNotes : 'No additional medical history entered.'}
+  </div>
+
+  <div class="footer">
+    <div>
+      <p style="margin: 0; font-weight: 700; color: #0f172a;">OFFICIAL MEDICAL RECORD</p>
+      <p style="margin: 2px 0 0 0;">Hospital Management System • Confidential Healthcare Documentation</p>
+    </div>
+    <div class="sign-box">
+      <div class="sign-line"></div>
+      <p style="margin: 0; font-weight: 700; color: #0f172a;">Dr. ${activePatient.doctorAssigned}</p>
+      <p style="margin: 2px 0 0 0; font-size: 10px;">Attending Physician / Authorized Signature</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Medical_Report_${activePatient.patientId}_${activePatient.firstName}_${activePatient.lastName}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Downloaded official report for ${activePatient.firstName} ${activePatient.lastName}`);
+  };
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 max-w-7xl mx-auto space-y-6">
       {/* ── Top Header Bar ── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print print:hidden">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Reports & Clinical Analytics</h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
@@ -214,7 +372,7 @@ export const ReportsPage = () => {
       </div>
 
       {/* ── Navigation Tabs ── */}
-      <div className="flex flex-wrap gap-2 p-1 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm">
+      <div className="flex flex-wrap gap-2 p-1 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm no-print print:hidden">
         <button
           onClick={() => setActiveTab('individual-patient')}
           className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
@@ -289,7 +447,7 @@ export const ReportsPage = () => {
       {activeTab === 'individual-patient' && (
         <div className="space-y-6">
           {/* Patient Status Filter Pills Bar */}
-          <div className="p-4 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm space-y-3">
+          <div className="p-4 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm space-y-3 no-print print:hidden">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
                 <Filter size={14} className="text-blue-500" /> Filter Patients by Clinical Status:
@@ -379,7 +537,7 @@ export const ReportsPage = () => {
           {/* ── Two-Pane Individual Patient Report Layout ── */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left Pane: Selectable Patients List (4 cols) */}
-            <div className="lg:col-span-4 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm p-4 space-y-3">
+            <div className="lg:col-span-4 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm p-4 space-y-3 no-print print:hidden">
               <div className="relative">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -453,7 +611,25 @@ export const ReportsPage = () => {
             {/* Right Pane: Selected Patient's Separate Report Dossier (8 cols) */}
             <div className="lg:col-span-8 space-y-6">
               {activePatient ? (
-                <>
+                <div id="printable-patient-dossier" className="space-y-6">
+                  {/* Printable Official Letterhead (Visible ONLY during window.print) */}
+                  <div className="hidden print:block print-only mb-6 border-b-2 border-gray-900 pb-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h1 className="text-2xl font-black tracking-tight text-gray-900">HOSPITAL MANAGEMENT SYSTEM</h1>
+                        <p className="text-xs text-gray-700 font-semibold mt-0.5">Department of Inpatient Care & Medical Records</p>
+                        <p className="text-[11px] text-gray-500">Official Clinical Summary & Medical Progress Report</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold border border-gray-800 text-gray-900 uppercase">
+                          {activePatient.status}
+                        </span>
+                        <p className="font-mono font-bold text-xs mt-1 text-gray-900">{activePatient.patientId}</p>
+                        <p className="text-[10px] text-gray-500">Report Date: {new Date().toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Patient Clinical Header Card */}
                   <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-6 shadow-sm space-y-4">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
@@ -484,7 +660,7 @@ export const ReportsPage = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 no-print print:hidden">
                         <Link
                           to={`/patients/${activePatient.id}`}
                           className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 dark:text-blue-400 rounded-lg text-xs font-semibold transition-colors"
@@ -493,10 +669,17 @@ export const ReportsPage = () => {
                         </Link>
                         <button
                           onClick={handlePrintPatientReport}
-                          className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg text-xs font-medium text-gray-700 dark:text-gray-300 transition-colors"
+                          className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg text-xs font-medium text-gray-700 dark:text-gray-300 transition-colors shadow-sm"
                           title="Print Patient Report"
                         >
                           <Printer size={14} /> Print
+                        </button>
+                        <button
+                          onClick={handleDownloadPatientReport}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm"
+                          title="Download Patient Medical Report"
+                        >
+                          <Download size={14} /> Download Report
                         </button>
                       </div>
                     </div>
@@ -708,7 +891,22 @@ export const ReportsPage = () => {
                       </p>
                     </div>
                   )}
-                </>
+
+                  {/* Printable Doctor Signature & Certification Block (Visible ONLY during window.print) */}
+                    <div className="hidden print:block print-only pt-8 mt-8 border-t border-gray-400">
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <p className="text-xs font-bold text-gray-900">CONFIDENTIAL MEDICAL DOCUMENT</p>
+                          <p className="text-[10px] text-gray-600">This clinical dossier contains protected health information issued by HMS.</p>
+                        </div>
+                        <div className="text-center min-w-[200px]">
+                          <div className="border-b border-gray-900 w-44 mb-1 mx-auto" />
+                          <p className="text-xs font-bold text-gray-900">Dr. {activePatient.doctorAssigned}</p>
+                          <p className="text-[10px] text-gray-600">Attending Physician / Authorized Signature</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
               ) : (
                 <div className="p-12 text-center bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
                   <Users size={36} className="mx-auto text-gray-400 mb-2 opacity-50" />
