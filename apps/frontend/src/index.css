@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -81,4 +81,62 @@
 
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-gray-400 dark:bg-gray-600;
+}
+
+/* ── Print Specific Styles ── */
+@media print {
+  /* Hide all app navigation, headers, sidebars, buttons, toolbars, and selectors */
+  aside,
+  header,
+  nav,
+  button,
+  .no-print,
+  [role="navigation"] {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: #111827 !important;
+    font-size: 11pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide everything by default */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Unhide only the printable patient dossier and its children */
+  #printable-patient-dossier,
+  #printable-patient-dossier * {
+    visibility: visible;
+  }
+
+  #printable-patient-dossier {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    background: white !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Show elements designated for print only */
+  .print-only {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  /* Force background colors and borders in print preview */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
