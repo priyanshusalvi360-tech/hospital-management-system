@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Edit2, Trash2, UserCheck, UserX, AlertCircle, Phone, MapPin, 
   Calendar, Clock, Stethoscope, BedDouble, Activity, FileText, Plus, X, 
-  Loader2, Heart, Thermometer, TrendingUp, CheckCircle2, RotateCcw 
+  Loader2, Heart, Thermometer, TrendingUp, CheckCircle2, RotateCcw,
+  Printer, Download 
 } from 'lucide-react';
 import { 
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip 
@@ -209,10 +210,135 @@ export const PatientDetailPage = () => {
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
+  const handlePrintReport = () => {
+    if (!patient) return;
+    toast.success(`Preparing printable medical report for ${patient.firstName} ${patient.lastName}...`);
+    window.print();
+  };
+
+  const handleDownloadReport = () => {
+    if (!patient) return;
+
+    const vitalsRows = (parsedNotes.dailyReports || [])
+      .map((r: any) => `
+        <tr>
+          <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: 500;">${formatDate(r.date, 'MMM dd, yyyy - hh:mm a')}</td>
+          <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold; color: #1e3a8a;">${r.condition} (${r.conditionScore}/100)</td>
+          <td style="padding: 10px; border: 1px solid #e2e8f0;">${r.vitals?.temperature ? r.vitals.temperature + '°F' : '—'}</td>
+          <td style="padding: 10px; border: 1px solid #e2e8f0;">${r.vitals?.bloodPressure || '—'}</td>
+          <td style="padding: 10px; border: 1px solid #e2e8f0;">${r.vitals?.heartRate ? r.vitals.heartRate + ' bpm' : '—'}</td>
+          <td style="padding: 10px; border: 1px solid #e2e8f0;">${r.conditionNotes || (r as any).symptoms || '—'}</td>
+          <td style="padding: 10px; border: 1px solid #e2e8f0; font-style: italic; color: #334155;">"${r.nurseReview || '—'}"</td>
+        </tr>
+      `).join('');
+
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medical Dossier - ${patient.firstName} ${patient.lastName} (${patient.patientId})</title>
+  <style>
+    @page { size: A4 portrait; margin: 15mm; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 30px; color: #0f172a; background: #ffffff; line-height: 1.5; }
+    .header { border-bottom: 3px solid #2563eb; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .hospital-title { font-size: 22px; font-weight: 800; color: #1e3a8a; margin: 0; }
+    .hospital-sub { font-size: 12px; color: #64748b; margin: 3px 0 0 0; }
+    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 700; text-transform: uppercase; background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+    .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .meta-cell { font-size: 12px; }
+    .meta-label { color: #64748b; font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+    .meta-val { font-weight: 600; color: #0f172a; margin-top: 2px; }
+    .section-head { font-size: 14px; font-weight: 800; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin: 24px 0 14px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; margin-bottom: 16px; }
+    th { background: #f1f5f9; color: #334155; font-weight: 700; padding: 8px 10px; border: 1px solid #cbd5e1; }
+    .notes-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 8px; font-size: 12px; white-space: pre-line; }
+    .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: flex-end; font-size: 11px; color: #64748b; }
+    .sign-box { text-align: center; width: 220px; }
+    .sign-line { border-top: 1px solid #0f172a; margin-bottom: 4px; }
+    .print-btn-bar { text-align: right; margin-bottom: 20px; }
+    .btn-print { background: #2563eb; color: #fff; padding: 8px 18px; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; }
+    @media print { body { margin: 0; } .print-btn-bar { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="print-btn-bar">
+    <button class="btn-print" onclick="window.print()">🖨️ Print Dossier / Save as PDF</button>
+  </div>
+  <div class="header">
+    <div>
+      <h1 class="hospital-title">HOSPITAL MANAGEMENT SYSTEM</h1>
+      <p class="hospital-sub">Department of Inpatient Care & Medical Records</p>
+      <p class="hospital-sub">Official Patient Medical Progress Report</p>
+    </div>
+    <div style="text-align: right;">
+      <span class="status-badge">${patient.status}</span>
+      <p style="font-family: monospace; font-size: 12px; font-weight: bold; margin: 5px 0 0 0; color: #1e293b;">${patient.patientId}</p>
+      <p style="font-size: 10px; color: #94a3b8; margin: 2px 0 0 0;">Report Date: ${new Date().toLocaleDateString()}</p>
+    </div>
+  </div>
+  <div class="meta-grid">
+    <div class="meta-cell"><div class="meta-label">Patient Name</div><div class="meta-val">${patient.firstName} ${patient.lastName}</div></div>
+    <div class="meta-cell"><div class="meta-label">Age / Gender</div><div class="meta-val">${patient.age} yrs • ${patient.gender}</div></div>
+    <div class="meta-cell"><div class="meta-label">Blood Group</div><div class="meta-val">${patient.bloodGroup ? patient.bloodGroup.replace('_', ' ') : 'N/A'}</div></div>
+    <div class="meta-cell"><div class="meta-label">Phone</div><div class="meta-val">${patient.phone}</div></div>
+    <div class="meta-cell"><div class="meta-label">Primary Diagnosis</div><div class="meta-val">${patient.disease}</div></div>
+    <div class="meta-cell"><div class="meta-label">Attending Doctor</div><div class="meta-val">Dr. ${patient.doctorAssigned}</div></div>
+    <div class="meta-cell"><div class="meta-label">Ward / Room</div><div class="meta-val">${patient.roomNumber || 'Not Assigned'}</div></div>
+    <div class="meta-cell"><div class="meta-label">Admission Date</div><div class="meta-val">${formatDate(patient.admissionDate, 'MMM dd, yyyy')}</div></div>
+  </div>
+  <div class="section-head">Clinical Condition & Nurse Reviews Log (${parsedNotes.dailyReports.length} Recorded Entries)</div>
+  ${parsedNotes.dailyReports.length > 0 ? `
+    <table>
+      <thead>
+        <tr>
+          <th>Observation Time</th>
+          <th>Condition (Score)</th>
+          <th>Temp</th>
+          <th>Blood Pressure</th>
+          <th>Heart Rate</th>
+          <th>Symptoms</th>
+          <th>Nurse Review & Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${vitalsRows}
+      </tbody>
+    </table>
+  ` : '<p style="font-style: italic; color: #64748b; font-size: 12px;">No daily condition reports recorded yet.</p>'}
+  <div class="section-head">General Medical Notes & Clinical History</div>
+  <div class="notes-box">${parsedNotes.generalNotes ? parsedNotes.generalNotes : 'No additional medical history entered.'}</div>
+  <div class="footer">
+    <div>
+      <p style="margin: 0; font-weight: 700; color: #0f172a;">OFFICIAL MEDICAL RECORD</p>
+      <p style="margin: 2px 0 0 0;">Hospital Management System • Confidential Healthcare Documentation</p>
+    </div>
+    <div class="sign-box">
+      <div class="sign-line"></div>
+      <p style="margin: 0; font-weight: 700; color: #0f172a;">Dr. ${patient.doctorAssigned}</p>
+      <p style="margin: 2px 0 0 0; font-size: 10px;">Attending Physician / Authorized Signature</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Medical_Report_${patient.patientId}_${patient.firstName}_${patient.lastName}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Downloaded official report for ${patient.firstName} ${patient.lastName}`);
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print print:hidden">
         <button 
           onClick={() => navigate('/patients')}
           className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors w-fit"
@@ -220,17 +346,33 @@ export const PatientDetailPage = () => {
           <ArrowLeft size={16} /> Back to Patients
         </button>
 
-        {isAdmin() && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowReportModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-sm text-sm font-medium transition-all w-fit"
+            onClick={handlePrintReport}
+            className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors shadow-sm"
+            title="Print Patient Report"
           >
-            <Activity size={16} /> Add Daily Report
+            <Printer size={15} /> Print
           </button>
-        )}
+          <button
+            onClick={handleDownloadReport}
+            className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm"
+            title="Download Patient Medical Report"
+          >
+            <Download size={15} /> Download Report
+          </button>
+          {isAdmin() && (
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-sm text-sm font-medium transition-all w-fit"
+            >
+              <Activity size={16} /> Add Daily Report
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div id="printable-patient-dossier" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Profile Card */}
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6 flex flex-col items-center text-center shadow-sm h-fit">
           <div className={`w-32 h-32 rounded-full flex items-center justify-center text-4xl font-bold mb-4 shadow-inner ${getStatusColor(patient.status).replace('text-white', '').replace('bg-', 'bg-opacity-20 text-')}`}>
