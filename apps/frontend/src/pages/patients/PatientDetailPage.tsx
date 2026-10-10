@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Edit2, Trash2, UserCheck, UserX, AlertCircle, Phone, MapPin, 
   Calendar, Clock, Stethoscope, BedDouble, Activity, FileText, Plus, X, 
-  Loader2, Heart, Thermometer, TrendingUp, CheckCircle2 
+  Loader2, Heart, Thermometer, TrendingUp, CheckCircle2, RotateCcw 
 } from 'lucide-react';
 import { 
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip 
@@ -282,6 +282,14 @@ export const PatientDetailPage = () => {
                     className="flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 dark:text-blue-400 rounded-lg text-sm font-medium transition-colors"
                   >
                     <UserCheck size={16} /> Admit
+                  </button>
+                )}
+                {patient.status === 'DISCHARGED' && (
+                  <button 
+                    onClick={() => navigate(`/patients?action=readmit&patientId=${patient.id}`)}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 dark:text-emerald-300 rounded-lg text-sm font-semibold transition-colors border border-emerald-200 dark:border-emerald-800 col-span-2 shadow-sm"
+                  >
+                    <RotateCcw size={16} /> Re-admit Patient (New Disease)
                   </button>
                 )}
                 {patient.status === 'ADMITTED' && (
