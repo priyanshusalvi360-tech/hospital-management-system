@@ -19,7 +19,9 @@ const app = express();
 
 app.use(helmet());
 app.use(cors({
-  origin: env.CORS_ORIGIN,
+  origin: env.CORS_ORIGIN.includes(',') 
+    ? env.CORS_ORIGIN.split(',').map(s => s.trim()) 
+    : (env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN),
   credentials: true,
 }));
 
