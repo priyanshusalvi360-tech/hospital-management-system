@@ -121,7 +121,7 @@ export const ReportsPage = () => {
 
   // Patients filtered by status and search
   const filteredPatients = useMemo(() => {
-    return enrichedPatients.filter(p => {
+    const list = enrichedPatients.filter(p => {
       const matchStatus = patientStatusFilter === 'ALL' || p.status === patientStatusFilter;
       const matchSearch = !patientSearchQuery.trim() || 
         `${p.firstName} ${p.lastName}`.toLowerCase().includes(patientSearchQuery.toLowerCase()) ||
@@ -129,6 +129,20 @@ export const ReportsPage = () => {
         p.disease.toLowerCase().includes(patientSearchQuery.toLowerCase()) ||
         p.doctorAssigned.toLowerCase().includes(patientSearchQuery.toLowerCase());
       return matchStatus && matchSearch;
+    });
+
+    const statusPriority: Record<string, number> = {
+      ADMITTED: 1,
+      CRITICAL: 2,
+      PENDING: 3,
+      DISCHARGED: 4,
+    };
+
+    return [...list].sort((a: any, b: any) => {
+      const rankA = statusPriority[a.status] ?? 99;
+      const rankB = statusPriority[b.status] ?? 99;
+      if (rankA !== rankB) return rankA - rankB;
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
     });
   }, [enrichedPatients, patientStatusFilter, patientSearchQuery]);
 
