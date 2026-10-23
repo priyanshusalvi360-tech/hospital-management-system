@@ -1,7 +1,7 @@
 import { useAuth } from '../../hooks/useAuth';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Stethoscope, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Stethoscope, Eye, EyeOff, Loader2, ShieldCheck, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function LoginPage() {
@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +22,12 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const selectAccount = (user: string, pass: string) => {
+    setUsername(user);
+    setPassword(pass);
+    setShowSuggestions(false);
   };
 
   return (
@@ -71,7 +78,7 @@ export default function LoginPage() {
           className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-8"
         >
           {/* Card header */}
-          <div className="mb-8 text-center">
+          <div className="mb-6 text-center">
             {/* Mobile-only icon */}
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-900/30 mb-4 md:hidden">
               <Stethoscope className="w-7 h-7 text-blue-600 dark:text-blue-400" />
@@ -80,11 +87,30 @@ export default function LoginPage() {
             <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
               Please enter your credentials to continue
             </p>
+
+            {/* Quick recommend pills */}
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Quick login:</span>
+              <button
+                type="button"
+                onClick={() => selectAccount('admin', 'Admin@123')}
+                className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-all flex items-center gap-1 shadow-sm"
+              >
+                <ShieldCheck size={13} /> Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => selectAccount('staff', 'Staff@123')}
+                className="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all flex items-center gap-1 shadow-sm"
+              >
+                <UserCheck size={13} /> Staff
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Username */}
-            <div>
+            {/* Username with Recommendations */}
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Username
               </label>
@@ -92,10 +118,66 @@ export default function LoginPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 required
+                autoComplete="username"
+                list="login-accounts"
                 placeholder="Enter your username"
                 className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none transition-all duration-200"
               />
+              <datalist id="login-accounts">
+                <option value="admin">Admin</option>
+                <option value="staff">Staff</option>
+              </datalist>
+
+              {/* Floating Recommendation Dropdown */}
+              {showSuggestions && (
+                <div className="absolute z-20 left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden text-left">
+                  <div className="px-3.5 py-1.5 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider bg-gray-50 dark:bg-gray-900/60 border-b border-gray-100 dark:border-gray-700/60">
+                    Recommended Logins
+                  </div>
+                  <div className="p-1 divide-y divide-gray-100 dark:divide-gray-700/50">
+                    <button
+                      type="button"
+                      onMouseDown={() => selectAccount('admin', 'Admin@123')}
+                      className="w-full px-3 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center justify-between transition-colors group"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-6 h-6 rounded-md bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
+                          <ShieldCheck size={14} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-semibold text-gray-900 dark:text-white">Admin Login</div>
+                          <div className="text-[11px] text-gray-500 font-mono">admin</div>
+                        </div>
+                      </div>
+                      <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
+                        Auto-fill &rarr;
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onMouseDown={() => selectAccount('staff', 'Staff@123')}
+                      className="w-full px-3 py-2 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30 flex items-center justify-between transition-colors group"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                          <UserCheck size={14} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-semibold text-gray-900 dark:text-white">Staff Login</div>
+                          <div className="text-[11px] text-gray-500 font-mono">staff</div>
+                        </div>
+                      </div>
+                      <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform">
+                        Auto-fill &rarr;
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Password */}
@@ -109,6 +191,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="current-password"
                   placeholder="Enter your password"
                   className="w-full p-3 pr-11 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none transition-all duration-200"
                 />
@@ -121,7 +204,6 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-
 
             {/* Sign In button */}
             <button
