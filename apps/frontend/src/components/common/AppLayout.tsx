@@ -1,4 +1,4 @@
-﻿import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -77,8 +77,10 @@ export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [notifOpen, setNotifOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const notifRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -94,11 +96,14 @@ export default function AppLayout() {
   const notifications = buildNotifications(allPatients);
   const unreadCount = notifications.filter(n => !n.read && !readIds.has(n.id)).length;
 
-  // Close notif panel when clicking outside
+  // Close notif & profile panels when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
         setNotifOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -339,9 +344,87 @@ export default function AppLayout() {
               </AnimatePresence>
             </div>
 
-            {/* Avatar */}
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs ${user?.role === 'ADMIN' ? 'bg-blue-600' : 'bg-purple-600'}`}>
-              {user?.username?.charAt(0).toUpperCase()}
+            {/* User Profile Avatar & Dropdown */}
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => setProfileOpen(o => !o)}
+                className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm transition-all hover:scale-105 hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm ${
+                  user?.role === 'ADMIN' ? 'bg-blue-600' : 'bg-purple-600'
+                }`}
+                title="Profile & Options"
+                aria-label="User Profile Menu"
+              >
+                {user?.username?.charAt(0).toUpperCase() || 'A'}
+              </button>
+
+              <AnimatePresence>
+                {profileOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-12 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                  >
+                    {/* User Header */}
+                    <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-base shadow-sm ${
+                          user?.role === 'ADMIN' ? 'bg-blue-600' : 'bg-purple-600'
+                        }`}>
+                          {user?.username?.charAt(0).toUpperCase() || 'A'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-sm text-gray-900 dark:text-white truncate">
+                            {user?.username}
+                          </p>
+                          <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-0.5 ${
+                            user?.role === 'ADMIN'
+                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                              : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
+                          }`}>
+                            {user?.role === 'ADMIN' ? 'Administrator' : 'Staff Member'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Navigation Links */}
+                    <div className="p-2 space-y-1">
+                      <Link
+                        to="/profile"
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                      >
+                        <UserIcon className="w-4 h-4 text-gray-400" />
+                        <span>My Profile</span>
+                      </Link>
+                      <Link
+                        to="/settings"
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                      >
+                        <Settings className="w-4 h-4 text-gray-400" />
+                        <span>Settings</span>
+                      </Link>
+                    </div>
+
+                    {/* Logout Section */}
+                    <div className="p-2 border-t border-gray-100 dark:border-gray-800">
+                      <button
+                        onClick={() => {
+                          setProfileOpen(false);
+                          handleLogout();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
+                      >
+                        <LogOut className="w-4 h-4 text-red-500" />
+                        <span>Log Out</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </header>
