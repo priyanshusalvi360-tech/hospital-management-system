@@ -9,7 +9,9 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false          # set manually in Render dashboard
+        sync: false          # set manually in Render dashboard from Neon
+      - key: DATABASE_URL_UNPOOLED
+        sync: false          # unpooled direct URL from Neon
       - key: JWT_ACCESS_SECRET
         sync: false
       - key: JWT_REFRESH_SECRET
