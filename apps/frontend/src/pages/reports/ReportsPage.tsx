@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { reportService } from '../../services/reportService';
 import { formatDate, getStatusColor, getInitials } from '../../lib/utils';
+import { useAuthStore } from '../../store/authStore';
 import type { DailyReport } from '../patients/PatientDetailPage';
 
 const conditionColorMap: Record<string, { badge: string; text: string; score: number }> = {
@@ -59,6 +60,7 @@ interface EnrichedPatient {
 }
 
 export const ReportsPage = () => {
+  const { user, isAdmin } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'individual-patient' | 'combined-reports' | 'patients' | 'staff' | 'admissions' | 'discharges'>('individual-patient');
   
   // Patient status filter: ALL, CRITICAL, DISCHARGED, ADMITTED, PENDING
@@ -372,7 +374,17 @@ export const ReportsPage = () => {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {!isAdmin() && (
+            <span className="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm">
+              <Eye size={14} /> View-Only Mode (Staff Access)
+            </span>
+          )}
+          {isAdmin() && (
+            <span className="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm">
+              <Sparkles size={14} /> Admin Mode
+            </span>
+          )}
           <button onClick={() => handleExport('PDF')} className="flex items-center gap-2 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 rounded-lg text-sm font-medium transition-colors">
             <FileText size={16} /> PDF
           </button>
@@ -423,16 +435,18 @@ export const ReportsPage = () => {
           <Users size={18} /> Patients Directory
         </button>
 
-        <button
-          onClick={() => setActiveTab('staff')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
-            activeTab === 'staff' 
-              ? 'bg-blue-600 text-white shadow-sm' 
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-          }`}
-        >
-          <Stethoscope size={18} /> Staff Report
-        </button>
+        {isAdmin() && (
+          <button
+            onClick={() => setActiveTab('staff')}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
+              activeTab === 'staff' 
+                ? 'bg-blue-600 text-white shadow-sm' 
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+            }`}
+          >
+            <Stethoscope size={18} /> Staff Report
+          </button>
+        )}
 
         <button
           onClick={() => setActiveTab('admissions')}
@@ -797,12 +811,14 @@ export const ReportsPage = () => {
                         <p className="text-[11px] text-gray-400 mt-1 max-w-sm mx-auto">
                           Open the patient's profile and click "Add Daily Report" to log condition and nurse reviews.
                         </p>
-                        <Link
-                          to={`/patients/${activePatient.id}`}
-                          className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors"
-                        >
-                          <Activity size={13} /> Add Report for this Patient
-                        </Link>
+                        {isAdmin() && (
+                          <Link
+                            to={`/patients/${activePatient.id}`}
+                            className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors"
+                          >
+                            <Activity size={13} /> Add Report for this Patient
+                          </Link>
+                        )}
                       </div>
                     )}
                   </div>
@@ -843,9 +859,9 @@ export const ReportsPage = () => {
                                     </span>
                                   </div>
 
-                                  {report.recordedBy && (
-                                    <span className="text-[10px] text-gray-400">By {report.recordedBy}</span>
-                                  )}
+                                  <span className="text-[10px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full font-medium">
+                                    Created by: {report.recordedBy || 'Administrator'}
+                                  </span>
                                 </div>
 
                                 {/* Vitals */}
@@ -979,6 +995,9 @@ export const ReportsPage = () => {
                         </span>
                         <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${cond.badge}`}>
                           {report.condition} ({report.conditionScore}%)
+                        </span>
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full font-medium">
+                          Created by: {report.recordedBy || 'Administrator'}
                         </span>
                         <Link
                           to={`/patients/${report.patient.id}`}
