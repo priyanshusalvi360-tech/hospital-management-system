@@ -71,7 +71,21 @@ export const PatientsPage = () => {
     onError: () => toast.error('Failed to delete patient'),
   });
 
-  const patients = data?.data || [];
+  const patients = useMemo(() => {
+    const raw = data?.data || [];
+    const statusPriority: Record<string, number> = {
+      ADMITTED: 1,
+      CRITICAL: 2,
+      PENDING: 3,
+      DISCHARGED: 4,
+    };
+    return [...raw].sort((a: any, b: any) => {
+      const rankA = statusPriority[a.status] ?? 99;
+      const rankB = statusPriority[b.status] ?? 99;
+      if (rankA !== rankB) return rankA - rankB;
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
+  }, [data]);
   const meta = data?.meta || { totalPages: 1, page: 1 };
 
   const handleEdit = (patient: any) => {
@@ -127,9 +141,9 @@ export const PatientsPage = () => {
           >
             <option value="">All Statuses</option>
             <option value="ADMITTED">Admitted</option>
-            <option value="DISCHARGED">Discharged</option>
             <option value="CRITICAL">Critical</option>
             <option value="PENDING">Pending</option>
+            <option value="DISCHARGED">Discharged</option>
           </select>
         </div>
       </div>
