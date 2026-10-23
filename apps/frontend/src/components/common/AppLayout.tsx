@@ -133,7 +133,7 @@ export default function AppLayout() {
     { name: 'Admissions', path: '/admissions', icon: UserPlus,        section: 'MAIN' },
     { name: 'Discharge',  path: '/discharge',  icon: UserCheck,       section: 'MAIN' },
     { name: 'Staff',      path: '/staff',      icon: Stethoscope,     section: 'MANAGE' },
-    ...(user?.role === 'ADMIN' ? [{ name: 'Reports', path: '/reports', icon: ChartBar, section: 'MANAGE' }] : []),
+    { name: 'Reports',    path: '/reports',    icon: ChartBar,        section: 'MANAGE' },
     { name: 'Profile',    path: '/profile',    icon: UserIcon,        section: 'ACCOUNT' },
     { name: 'Settings',   path: '/settings',   icon: Settings,        section: 'ACCOUNT' },
   ];
