@@ -31,16 +31,16 @@ async function main() {
 
   // ─── STAFF MEMBERS ───────────────────────────────────────────────
   const staffData = [
-    { fullName: 'Dr. James Wilson', role: StaffRole.DOCTOR, department: 'Cardiology', phone: '555-0101', email: 'jwilson@hms.com', salary: 120000 },
-    { fullName: 'Dr. Sarah Chen', role: StaffRole.DOCTOR, department: 'Neurology', phone: '555-0102', email: 'schen@hms.com', salary: 130000 },
-    { fullName: 'Dr. Robert Martinez', role: StaffRole.DOCTOR, department: 'Orthopedics', phone: '555-0103', email: 'rmartinez@hms.com', salary: 115000 },
-    { fullName: 'Nurse Emily Davis', role: StaffRole.NURSE, department: 'ICU', phone: '555-0104', email: 'edavis@hms.com', salary: 65000 },
-    { fullName: 'Nurse Michael Brown', role: StaffRole.NURSE, department: 'General Ward', phone: '555-0105', email: 'mbrown@hms.com', salary: 62000 },
-    { fullName: 'Nurse Jessica Taylor', role: StaffRole.NURSE, department: 'Pediatrics', phone: '555-0106', email: 'jtaylor@hms.com', salary: 63000 },
-    { fullName: 'Alice Johnson', role: StaffRole.RECEPTIONIST, department: 'Front Desk', phone: '555-0107', email: 'ajohnson@hms.com', salary: 42000 },
-    { fullName: 'Thomas Anderson', role: StaffRole.PHARMACIST, department: 'Pharmacy', phone: '555-0108', email: 'tanderson@hms.com', salary: 75000 },
-    { fullName: 'Dr. Priya Patel', role: StaffRole.DOCTOR, department: 'Emergency', phone: '555-0109', email: 'ppatel@hms.com', salary: 125000 },
-    { fullName: 'Nurse Daniel Kim', role: StaffRole.NURSE, department: 'Emergency', phone: '555-0110', email: 'dkim@hms.com', salary: 68000 },
+    { fullName: 'Dr James Wilson', role: StaffRole.DOCTOR, department: 'Cardiology', phone: '9876540101', email: 'jwilson@hms.com', salary: 120000 },
+    { fullName: 'Dr Sarah Chen', role: StaffRole.DOCTOR, department: 'Neurology', phone: '9876540102', email: 'schen@hms.com', salary: 130000 },
+    { fullName: 'Dr Robert Martinez', role: StaffRole.DOCTOR, department: 'Orthopedics', phone: '9876540103', email: 'rmartinez@hms.com', salary: 115000 },
+    { fullName: 'Nurse Emily Davis', role: StaffRole.NURSE, department: 'ICU', phone: '9876540104', email: 'edavis@hms.com', salary: 65000 },
+    { fullName: 'Nurse Michael Brown', role: StaffRole.NURSE, department: 'General Ward', phone: '9876540105', email: 'mbrown@hms.com', salary: 62000 },
+    { fullName: 'Nurse Jessica Taylor', role: StaffRole.NURSE, department: 'Pediatrics', phone: '9876540106', email: 'jtaylor@hms.com', salary: 63000 },
+    { fullName: 'Alice Johnson', role: StaffRole.RECEPTIONIST, department: 'Front Desk', phone: '9876540107', email: 'ajohnson@hms.com', salary: 42000 },
+    { fullName: 'Thomas Anderson', role: StaffRole.PHARMACIST, department: 'Pharmacy', phone: '9876540108', email: 'tanderson@hms.com', salary: 75000 },
+    { fullName: 'Dr Priya Patel', role: StaffRole.DOCTOR, department: 'Emergency', phone: '9876540109', email: 'ppatel@hms.com', salary: 125000 },
+    { fullName: 'Nurse Daniel Kim', role: StaffRole.NURSE, department: 'Emergency', phone: '9876540110', email: 'dkim@hms.com', salary: 68000 },
   ];
 
   for (let i = 0; i < staffData.length; i++) {
@@ -103,9 +103,9 @@ async function main() {
         dateOfBirth: dob,
         age,
         bloodGroup: bloodGroups[i % bloodGroups.length],
-        phone: `555-${String(1000 + i).padStart(4, '0')}`,
-        emergencyContactName: `Emergency Contact ${i}`,
-        emergencyContactPhone: `555-${String(2000 + i).padStart(4, '0')}`,
+        phone: `987654${String(1000 + i).padStart(4, '0')}`,
+        emergencyContactName: 'Family Contact',
+        emergencyContactPhone: `987655${String(2000 + i).padStart(4, '0')}`,
         address: `${i * 10} Oak Street, Springfield, IL`,
         disease: diseases[(i - 1) % diseases.length],
         doctorAssigned: doctors[(i - 1) % doctors.length],
