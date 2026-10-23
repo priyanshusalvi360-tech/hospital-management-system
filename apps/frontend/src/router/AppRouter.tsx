@@ -32,7 +32,7 @@ export default function AppRouter() {
             <Route path="/admissions" element={<AdmissionsPage />} />
             <Route path="/discharge" element={<DischargePage />} />
             <Route path="/staff" element={<StaffPage />} />
-            <Route path="/reports" element={<ProtectedRoute requiredRole="ADMIN"><ReportsPage /></ProtectedRoute>} />
+            <Route path="/reports" element={<ReportsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
