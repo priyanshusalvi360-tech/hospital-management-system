@@ -156,22 +156,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          {/* Demo credentials box */}
-          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
-            <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">
-              Demo Credentials
-            </p>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-blue-800 dark:text-blue-300">
-                Username: <span className="font-bold">admin</span>
-              </span>
-              <span className="text-blue-200 dark:text-blue-700 select-none">|</span>
-              <span className="text-sm text-blue-800 dark:text-blue-300">
-                Password: <span className="font-bold">Admin@123</span>
-              </span>
-            </div>
-          </div>
         </motion.div>
       </div>
     </div>
