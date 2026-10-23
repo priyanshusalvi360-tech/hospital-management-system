@@ -354,7 +354,7 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
   const preservedDailyReports = initialParsed.dailyReports;
 
   // React Hook Form initialization
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     defaultValues: patient 
       ? { ...patient, medicalNotes: initialParsed.generalNotes }
       : initialReAdmitPatient
@@ -733,12 +733,46 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
           {/* Form Fields */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">First Name *</label>
-              <input {...register('firstName', { required: true })} className="w-full p-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">First Name (Letters only) *</label>
+              <input 
+                {...register('firstName', { 
+                  required: 'First name is required',
+                  pattern: {
+                    value: /^[A-Za-z\s]+$/,
+                    message: 'First name must contain only letters and spaces'
+                  }
+                })} 
+                placeholder="e.g. John"
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                  setValue('firstName', val, { shouldValidate: true });
+                }}
+                className="w-full p-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
+              {errors.firstName && (
+                <p className="text-red-500 text-[11px] mt-1">{errors.firstName.message as string}</p>
+              )}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Last Name *</label>
-              <input {...register('lastName', { required: true })} className="w-full p-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Last Name (Letters only) *</label>
+              <input 
+                {...register('lastName', { 
+                  required: 'Last name is required',
+                  pattern: {
+                    value: /^[A-Za-z\s]+$/,
+                    message: 'Last name must contain only letters and spaces'
+                  }
+                })} 
+                placeholder="e.g. Doe"
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                  setValue('lastName', val, { shouldValidate: true });
+                }}
+                className="w-full p-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
+              {errors.lastName && (
+                <p className="text-red-500 text-[11px] mt-1">{errors.lastName.message as string}</p>
+              )}
             </div>
           </div>
           
@@ -759,8 +793,28 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Phone *</label>
-              <input {...register('phone', { required: true })} className="w-full p-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Phone (10 Digits) *</label>
+              <input 
+                {...register('phone', { 
+                  required: 'Phone number is required',
+                  pattern: {
+                    value: /^\d{10}$/,
+                    message: 'Phone number must be exactly 10 digits'
+                  }
+                })} 
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="10 digit number e.g. 9876543210"
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setValue('phone', val, { shouldValidate: true });
+                }}
+                className="w-full p-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
+              {errors.phone && (
+                <p className="text-red-500 text-[11px] mt-1">{errors.phone.message as string}</p>
+              )}
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Blood Group</label>
@@ -813,12 +867,44 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
           {/* Emergency Contact */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Emergency Contact Name</label>
-              <input {...register('emergencyContactName')} placeholder="e.g. Jane Doe" className="w-full p-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Emergency Contact Name (Letters only)</label>
+              <input 
+                {...register('emergencyContactName', {
+                  pattern: {
+                    value: /^[A-Za-z\s]*$/,
+                    message: 'Emergency contact name must contain only letters and spaces'
+                  }
+                })} 
+                placeholder="e.g. Jane Doe" 
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                  setValue('emergencyContactName', val, { shouldValidate: true });
+                }}
+                className="w-full p-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
+              {errors.emergencyContactName && (
+                <p className="text-red-500 text-[11px] mt-1">{errors.emergencyContactName.message as string}</p>
+              )}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Emergency Phone</label>
-              <input {...register('emergencyContactPhone')} placeholder="e.g. +1 555-0199" className="w-full p-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Emergency Phone (10 Digits)</label>
+              <input 
+                {...register('emergencyContactPhone', {
+                  validate: (val) => !val || /^\d{10}$/.test(val) || 'Emergency phone must be exactly 10 digits'
+                })} 
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="10 digit number e.g. 9123456780" 
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setValue('emergencyContactPhone', val, { shouldValidate: true });
+                }}
+                className="w-full p-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
+              {errors.emergencyContactPhone && (
+                <p className="text-red-500 text-[11px] mt-1">{errors.emergencyContactPhone.message as string}</p>
+              )}
             </div>
           </div>
 
