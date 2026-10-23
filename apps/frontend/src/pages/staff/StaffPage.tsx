@@ -259,7 +259,7 @@ const StaffFormModal = ({
   onSuccess: (isNew: boolean) => void;
 }) => {
   const isEditing = !!staff;
-  const { register, handleSubmit } = useForm({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm({
     defaultValues: staff || { status: 'ACTIVE', role: 'DOCTOR' },
   });
 
@@ -305,8 +305,25 @@ const StaffFormModal = ({
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name *</label>
-            <input {...register('fullName', { required: true })} className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name (Letters only) *</label>
+            <input 
+              {...register('fullName', { 
+                required: 'Full name is required',
+                pattern: {
+                  value: /^[A-Za-z\s]+$/,
+                  message: 'Full name must contain only letters and spaces'
+                }
+              })} 
+              placeholder="e.g. Dr John Smith"
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                setValue('fullName', val, { shouldValidate: true });
+              }}
+              className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" 
+            />
+            {errors.fullName && (
+              <p className="text-red-500 text-xs mt-1">{errors.fullName.message as string}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -326,12 +343,56 @@ const StaffFormModal = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email *</label>
-            <input type="email" {...register('email', { required: true })} className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+            <input type="email" {...register('email', { required: 'Email is required' })} className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email.message as string}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone *</label>
-            <input {...register('phone', { required: true })} className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone (10 Digits) *</label>
+            <input 
+              {...register('phone', { 
+                required: 'Phone number is required',
+                pattern: {
+                  value: /^\d{10}$/,
+                  message: 'Phone number must be exactly 10 digits'
+                }
+              })} 
+              type="tel"
+              inputMode="numeric"
+              maxLength={10}
+              placeholder="10 digit number e.g. 9876543210"
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                setValue('phone', val, { shouldValidate: true });
+              }}
+              className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" 
+            />
+            {errors.phone && (
+              <p className="text-red-500 text-xs mt-1">{errors.phone.message as string}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Emergency Contact Phone (10 Digits)</label>
+            <input 
+              {...register('emergencyContact', {
+                validate: (val) => !val || /^\d{10}$/.test(val) || 'Emergency contact must be exactly 10 digits'
+              })} 
+              type="tel"
+              inputMode="numeric"
+              maxLength={10}
+              placeholder="10 digit number e.g. 9123456780"
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                setValue('emergencyContact', val, { shouldValidate: true });
+              }}
+              className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" 
+            />
+            {errors.emergencyContact && (
+              <p className="text-red-500 text-xs mt-1">{errors.emergencyContact.message as string}</p>
+            )}
           </div>
 
           <div>
