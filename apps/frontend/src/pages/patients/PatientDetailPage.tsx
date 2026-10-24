@@ -80,9 +80,11 @@ export const PatientDetailPage = () => {
   const admitMutation = useMutation({
     mutationFn: () => patientService.admit(id!),
     onSuccess: () => {
-      toast.success('Patient admitted successfully');
+      toast.success('Patient admitted successfully! Bed assigned.');
       queryClient.invalidateQueries({ queryKey: ['patient', id] });
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admissions-chart'] });
     },
     onError: () => toast.error('Failed to admit patient')
   });
@@ -90,9 +92,11 @@ export const PatientDetailPage = () => {
   const dischargeMutation = useMutation({
     mutationFn: () => patientService.discharge(id!),
     onSuccess: () => {
-      toast.success('Patient discharged successfully');
+      toast.success('Patient discharged successfully! Bed freed.');
       queryClient.invalidateQueries({ queryKey: ['patient', id] });
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admissions-chart'] });
     },
     onError: () => toast.error('Failed to discharge patient')
   });
@@ -434,7 +438,7 @@ export const PatientDetailPage = () => {
                     <RotateCcw size={16} /> Re-admit Patient (New Disease)
                   </button>
                 )}
-                {patient.status === 'ADMITTED' && (
+                {(patient.status === 'ADMITTED' || patient.status === 'CRITICAL') && (
                   <button 
                     onClick={() => dischargeMutation.mutate()}
                     disabled={dischargeMutation.isPending}
