@@ -1,13 +1,17 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
-import { Search, Eye } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Search, Eye, UserX } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { patientService } from '../../services/patientService';
 import { useDebounce } from '../../hooks/useDebounce';
 import { getInitials, getStatusColor } from '../../lib/utils';
+import { useAuthStore } from '../../store/authStore';
 
 export const AdmissionsPage = () => {
+  const queryClient = useQueryClient();
+  const { isAdmin } = useAuthStore();
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState('');
   const search = useDebounce(searchInput, 400);
@@ -16,6 +20,23 @@ export const AdmissionsPage = () => {
     queryKey: ['patients', { page, search, status: 'ADMITTED' }],
     queryFn: () => patientService.getAll({ page, search, status: 'ADMITTED', limit: 10 }),
   });
+
+  const dischargeMutation = useMutation({
+    mutationFn: (id: string) => patientService.discharge(id),
+    onSuccess: () => {
+      toast.success('Patient discharged successfully! Bed freed.');
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admissions-chart'] });
+    },
+    onError: () => toast.error('Failed to discharge patient'),
+  });
+
+  const handleDischarge = (patient: any) => {
+    if (window.confirm(`Discharge ${patient.firstName} ${patient.lastName} and release their bed?`)) {
+      dischargeMutation.mutate(patient.id);
+    }
+  };
 
   const rawAdm: any = (data as any)?.data;
   const patients: any[] = rawAdm?.items ?? (Array.isArray(rawAdm) ? rawAdm : []);
@@ -100,9 +121,21 @@ export const AdmissionsPage = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Link to={`/patients/${patient.id}`} className="p-1.5 inline-block text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors">
-                        <Eye size={18} />
-                      </Link>
+                      <div className="flex items-center justify-end gap-1.5">
+                        {isAdmin() && (
+                          <button
+                            onClick={() => handleDischarge(patient)}
+                            disabled={dischargeMutation.isPending}
+                            className="p-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950/40 rounded-lg transition-colors"
+                            title="Discharge patient & free bed"
+                          >
+                            <UserX size={16} />
+                          </button>
+                        )}
+                        <Link to={`/patients/${patient.id}`} className="p-1.5 inline-block text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors" title="View details">
+                          <Eye size={18} />
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))
