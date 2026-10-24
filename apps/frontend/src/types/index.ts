@@ -63,6 +63,10 @@ export interface DashboardStats {
   doctors: number;
   nurses: number;
   receptionists: number;
+  totalBeds?: number;
+  occupiedBeds?: number;
+  availableBeds?: number;
+  todaysActivity?: number;
 }
 
 export interface ApiResponse<T> {
