@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Users, BedDouble, CheckCircle, AlertCircle, Users2, Stethoscope, Heart, Phone, Clock, Activity, TrendingUp, Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -38,6 +38,7 @@ export const DashboardPage = () => {
     queryFn: () => dashboardService.getStats(),
     refetchOnMount: 'always',
     staleTime: 0,
+    refetchInterval: 4000,
   });
 
   const { data: admissionsData, isLoading: loadingAdmissions } = useQuery({
@@ -65,6 +66,10 @@ export const DashboardPage = () => {
   const admissions = admissionsData?.data || [];
   const staffDistribution = staffData?.data || [];
   const activities = activityData?.data || [];
+
+  const totalBeds = stats.totalBeds || 50;
+  const occupiedBeds = stats.occupiedBeds ?? ((stats.admittedPatients || 0) + (stats.criticalPatients || 0));
+  const availableBeds = stats.availableBeds ?? Math.max(0, totalBeds - occupiedBeds);
 
   return (
     <motion.div
@@ -105,13 +110,13 @@ export const DashboardPage = () => {
         ) : (
           <>
             <StatCard title="Total Patients" value={stats.totalPatients || 0} icon={<Users className="text-blue-500" />} bg="bg-blue-100 dark:bg-blue-900/30" />
-            <StatCard title="Admitted" value={stats.admittedPatients || 0} icon={<BedDouble className="text-purple-500" />} bg="bg-purple-100 dark:bg-purple-900/30" />
-            <StatCard title="Discharged" value={stats.dischargedPatients || 0} icon={<CheckCircle className="text-green-500" />} bg="bg-green-100 dark:bg-green-900/30" />
-            <StatCard title="Critical" value={stats.criticalPatients || 0} icon={<AlertCircle className="text-red-500" />} bg="bg-red-100 dark:bg-red-900/30" />
+            <StatCard title="Admitted" value={stats.admittedPatients || 0} subtitle={`${stats.criticalPatients || 0} critical in bed`} icon={<BedDouble className="text-purple-500" />} bg="bg-purple-100 dark:bg-purple-900/30" />
+            <StatCard title="Discharged" value={stats.dischargedPatients || 0} subtitle="Completed stay" icon={<CheckCircle className="text-green-500" />} bg="bg-green-100 dark:bg-green-900/30" />
+            <StatCard title="Critical" value={stats.criticalPatients || 0} subtitle="ICU / Urgent" icon={<AlertCircle className="text-red-500" />} bg="bg-red-100 dark:bg-red-900/30" />
             
             <StatCard title="Total Staff" value={stats.totalStaff || 0} icon={<Users2 className="text-indigo-500" />} bg="bg-indigo-100 dark:bg-indigo-900/30" />
             <StatCard title="Doctors" value={stats.doctors || 0} icon={<Stethoscope className="text-teal-500" />} bg="bg-teal-100 dark:bg-teal-900/30" />
-            <StatCard title="Available Beds" value={stats.availableBeds || 0} icon={<Heart className="text-pink-500" />} bg="bg-pink-100 dark:bg-pink-900/30" />
+            <StatCard title="Available Beds" value={availableBeds} subtitle={`${availableBeds} of ${totalBeds} beds free`} icon={<BedDouble className="text-emerald-500" />} bg="bg-emerald-100 dark:bg-emerald-900/30" />
             <StatCard title="Today's Activity" value={stats.todaysActivity || 0} icon={<Activity className="text-orange-500" />} bg="bg-orange-100 dark:bg-orange-900/30" />
           </>
         )}
@@ -228,15 +233,16 @@ export const DashboardPage = () => {
   );
 };
 
-const StatCard = ({ title, value, icon, bg }: { title: string; value: number | string; icon: React.ReactNode; bg: string }) => (
+const StatCard = ({ title, value, icon, bg, subtitle }: { title: string; value: number | string; icon: React.ReactNode; bg: string; subtitle?: string }) => (
   <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
     <div className="flex items-center gap-4">
-      <div className={`w-14 h-14 rounded-full ${bg} flex items-center justify-center`}>
+      <div className={`w-14 h-14 rounded-full ${bg} flex items-center justify-center shrink-0`}>
         {icon}
       </div>
       <div>
         <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
         <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+        {subtitle && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{subtitle}</p>}
       </div>
     </div>
   </div>
