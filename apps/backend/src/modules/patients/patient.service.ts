@@ -70,23 +70,49 @@ export const createPatient = async (data: CreatePatientInput) => {
 };
 
 export const updatePatient = async (id: string, data: UpdatePatientInput) => {
-  await getPatientById(id);
-  return prisma.patient.update({ where: { id }, data });
+  const existing = await getPatientById(id);
+  const payload: any = { ...data };
+
+  if (payload.status === 'DISCHARGED') {
+    if (!payload.dischargeDate) payload.dischargeDate = new Date();
+    payload.roomNumber = null; // Free up room/bed
+  } else if (payload.status === 'ADMITTED' || payload.status === 'CRITICAL') {
+    payload.dischargeDate = null;
+    if (existing.status === 'DISCHARGED' || !existing.admissionDate) {
+      payload.admissionDate = new Date();
+    }
+  }
+
+  return prisma.patient.update({ where: { id }, data: payload });
 };
 
 export const deletePatient = async (id: string) => {
   await getPatientById(id);
-  await prisma.patient.update({ where: { id }, data: { isDeleted: true } });
+  await prisma.patient.update({ where: { id }, data: { isDeleted: true, roomNumber: null } });
 };
 
 export const admitPatient = async (id: string) => {
   await getPatientById(id);
-  return prisma.patient.update({ where: { id }, data: { status: 'ADMITTED', admissionDate: new Date() } });
+  return prisma.patient.update({
+    where: { id },
+    data: {
+      status: 'ADMITTED',
+      admissionDate: new Date(),
+      dischargeDate: null,
+    },
+  });
 };
 
 export const dischargePatient = async (id: string) => {
   await getPatientById(id);
-  return prisma.patient.update({ where: { id }, data: { status: 'DISCHARGED', dischargeDate: new Date() } });
+  return prisma.patient.update({
+    where: { id },
+    data: {
+      status: 'DISCHARGED',
+      dischargeDate: new Date(),
+      roomNumber: null, // Free up room/bed
+    },
+  });
 };
 
 export const getDashboardStats = async () => {
