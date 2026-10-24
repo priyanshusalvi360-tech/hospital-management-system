@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Search, Plus, Filter, Edit2, Trash2, Eye, X, Loader2, 
-  RotateCcw, CheckCircle2, History, AlertCircle, Sparkles, UserCheck 
+  RotateCcw, CheckCircle2, History, AlertCircle, Sparkles, UserCheck, UserX 
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -70,6 +70,24 @@ export const PatientsPage = () => {
     },
     onError: () => toast.error('Failed to delete patient'),
   });
+
+  const dischargeMutation = useMutation({
+    mutationFn: (id: string) => patientService.discharge(id),
+    onSuccess: () => {
+      toast.success('Patient discharged successfully! Bed freed.');
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admissions-chart'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
+    },
+    onError: () => toast.error('Failed to discharge patient'),
+  });
+
+  const handleDischarge = (patient: any) => {
+    if (window.confirm(`Discharge ${patient.firstName} ${patient.lastName} and release their bed?`)) {
+      dischargeMutation.mutate(patient.id);
+    }
+  };
 
   const patients = useMemo(() => {
     const raw = data?.data || [];
@@ -214,6 +232,16 @@ export const PatientsPage = () => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
+                        {isAdmin() && (patient.status === 'ADMITTED' || patient.status === 'CRITICAL') && (
+                          <button
+                            onClick={() => handleDischarge(patient)}
+                            disabled={dischargeMutation.isPending}
+                            className="p-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950/40 rounded-lg transition-colors"
+                            title="Discharge patient & free bed"
+                          >
+                            <UserX size={16} />
+                          </button>
+                        )}
                         {isAdmin() && patient.status === 'DISCHARGED' && (
                           <button
                             onClick={() => {
